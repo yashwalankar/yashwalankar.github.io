@@ -34,7 +34,7 @@ export const personalInfo = {
   projects: [
     {
       name: "QuickETL",
-      description: "Think Web UI based cron scheduler, used mostly to collect 1min OHLCV data for SPY daily",
+      description: "Think Web UI based cron scheduler, used to collect 1min OHLCV data for SPY daily",
       technologies: ["React", "Node.js", "PostgreSQL", "Python", "Docker"],
       link: "https://github.com/yashwalankar/quickETL",
       demo: ""
@@ -42,7 +42,7 @@ export const personalInfo = {
     {
       name: "Minimal Personal Landing Page",
       description: "Static React.js site hosted on Github for Free using Github Build and Deploy Actions",
-      technologies: ["React.js", "TypeScript", "HTML/CSS", "Github Actions"],
+      technologies: ["React", "TypeScript", "HTML/CSS", "Github Actions"],
       link: "https://github.com/yashwalankar/yashwalankar.github.io",
       demo: ""
     },
@@ -81,7 +81,7 @@ export const personalInfo = {
       description: "Network-wide ad blocking and local DNS server",
       logo: adguardHomeIcon,
       icon: null,
-      link: ""
+      link: "https://adguard.com/"
     },
     {
       name: "InfluxDB",
@@ -95,77 +95,77 @@ export const personalInfo = {
       description: "Store timeseries data",
       logo: questdbIcon,
       icon: null,
-      link: ""
+      link: "https://questdb.com/"
     },
     {
       name: "Nginx",
       description: "Reverse Proxy for hosted services",
       logo: nginxIcon,
       icon: null,
-      link: ""
+      link: "https://nginx.org/"
     },
     {
       name: "Tailscale",
       description: "Zero config mesh VPN based on wireguard",
       logo: tailscaleIcon,
       icon: null,
-      link: ""
+      link: "https://tailscale.com/"
     },
     {
       name: "Wireguard",
       description: "VPN Server",
       logo: wireguardIcon,
       icon: null,
-      link: ""
+      link: "https://www.wireguard.com/"
     },
     {
       name: "Synology",
       description: "Platform for NAS",
       logo: synologyIcon,
       icon: null,
-      link: ""
+      link: "https://www.synology.com/"
     },
     {
       name: "Telegraf",
       description: "Plugin driven collection agent for sys metrics",
       logo: telegrafIcon,
       icon: null,
-      link: ""
+      link: "https://github.com/influxdata/telegraf"
     },
     {
       name: "Glance-app",
       description: "Homepage solution for self hosted services",
       logo: glanceAppIcon,
       icon: null,
-      link: ""
+      link: "https://github.com/glanceapp/glance/tree/main?tab=readme-ov-file"
     },
     {
       name: "Paperless",
       description: "Document Storage and archive with OCR",
       logo: paperlessIcon,
       icon: null,
-      link: ""
+      link: "https://docs.paperless-ngx.com/"
     },
     {
       name: "Booklore",
       description: "eBooks and Research Papers pdf management",
       logo: bookLoreIcon,
       icon: null,
-      link: ""
+      link: "https://github.com/booklore-app/booklore"
     },
     {
       name: "Jellyfin",
       description: "Personal media streaming server",
       logo: jellyfinIcon, // Use icon instead
       icon: null,
-      link: ""
+      link: "https://jellyfin.org/"
     },
     {
       name: "StirlingPDF",
       description: "PDF tool",
       logo: stirlingPdfIcon,
       icon: null,
-      link: ""
+      link: "https://github.com/Stirling-Tools/Stirling-PDF"
     },
   ],
   socialLinks: [

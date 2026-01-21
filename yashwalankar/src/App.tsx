@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, Mail, Linkedin, Github, MapPin, ExternalLink, Server, FileText } from 'lucide-react';
-import {personalInfo, notes} from './deets'
+import { personalInfo, notes } from './deets'
 const TITLES = ['Software Engineer', 'Full Stack Dev', 'Cloud Developer', 'Hacker'] as const;
 const CATEGORIES = ['About Me', 'Projects', 'Homelab', 'Contact Me'] as const;
 
@@ -186,9 +186,9 @@ function HomelabServiceCard({ service }: { service: typeof personalInfo.homelabS
       }}
     >
       {/* Left column: Logo or Icon */}
-      <div style={{ 
-        width: 56, 
-        height: 56, 
+      <div style={{
+        width: 56,
+        height: 56,
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
@@ -197,36 +197,36 @@ function HomelabServiceCard({ service }: { service: typeof personalInfo.homelabS
         borderRadius: 8,
       }}>
         {service.logo ? (
-          <img 
-            src={service.logo} 
+          <img
+            src={service.logo}
             alt={service.name}
-            style={{ 
-              maxWidth: '100%', 
-              maxHeight: '100%', 
-              objectFit: 'contain' 
-            }} 
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain'
+            }}
           />
         ) : (
           <span style={{ fontSize: 28 }}>{service.icon}</span>
         )}
       </div>
-      
+
       {/* Right column: Name and Description */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{ 
-          fontSize: 16, 
-          fontWeight: 600, 
-          color: '#111827', 
+        <h3 style={{
+          fontSize: 16,
+          fontWeight: 600,
+          color: '#111827',
           marginBottom: 4,
-          margin: 0 
+          margin: 0
         }}>
           {service.name}
         </h3>
-        <p style={{ 
-          color: '#6b7280', 
-          fontSize: 13, 
+        <p style={{
+          color: '#6b7280',
+          fontSize: 13,
           lineHeight: 1.5,
-          margin: 0 
+          margin: 0
         }}>
           {service.description}
         </p>
@@ -423,35 +423,36 @@ function PortfolioCard() {
                 <p style={{ color: '#374151', lineHeight: 1.6, fontSize: 16, marginBottom: 20 }}>
                   {personalInfo.aboutMe}
                 </p>
-                <a
-                  href={personalInfo.resumeLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: '#9333ea',
-                    color: 'white',
-                    padding: '12px 24px',
-                    borderRadius: 8,
-                    textDecoration: 'none',
-                    fontWeight: 500,
-                    fontSize: 16,
-                    transition: 'all 0.3s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#7e22ce';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#9333ea';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <FileText style={{ width: 20, height: 20 }} />
-                  View My Resume
-                </a>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <a
+                    href={personalInfo.resumeLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: '#9333ea',
+                      color: 'white',
+                      padding: '12px 24px',
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                      fontWeight: 500,
+                      fontSize: 16,
+                      transition: 'all 0.3s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#7e22ce';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#9333ea';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <FileText style={{ width: 20, height: 20 }} />
+                    View My Resume
+                  </a></div>
               </div>
             )}
 
@@ -591,7 +592,7 @@ function PortfolioCard() {
               onClick={() => setIsExpanded(false)}
               style={{
                 color: '#9333ea',
-                fontWeight: 500,
+                fontWeight: 200,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
@@ -600,9 +601,9 @@ function PortfolioCard() {
                 cursor: 'pointer',
                 fontSize: isMobile ? 14 : 16,
               }}
-            >
+            > 
               <ChevronRight style={{ width: 20, height: 20, transform: 'rotate(180deg)' }} />
-              Collapse
+              Back
             </button>
           </div>
         </div>
