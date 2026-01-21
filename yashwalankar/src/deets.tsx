@@ -34,9 +34,16 @@ export const personalInfo = {
   projects: [
     {
       name: "QuickETL",
-      description: "Think Web UI based cron scheduler, used to collect 1min OHLCV data for SPY daily",
-      technologies: ["React", "Node.js", "PostgreSQL", "Python", "Docker"],
+      description: "Think Web UI based cron scheduler for scripts, used to collect 1min OHLCV data for SPY daily for backtests and loading into a timeseries DB, web scraping automations",
+      technologies: ["React", "Node.js", "Postgres", "Python", "Docker"],
       link: "https://github.com/yashwalankar/quickETL",
+      demo: ""
+    },
+    {
+      name: "AlpacaTradingBot",
+      description: "Uses AlpacaAPI to listen to live market feed using websockets and trades based set rules, opens/closes positions, allows stop losses and take profits, notifies on order fills.",
+      technologies: ["Python", "FastAPI", "Docker", "Websockets"],
+      link: "",
       demo: ""
     },
     {
