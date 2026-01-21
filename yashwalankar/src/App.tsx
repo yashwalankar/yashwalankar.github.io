@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, Mail, Linkedin, Github, MapPin, ExternalLink, Server, FileText } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { personalInfo, notes } from './deets'
+
 const TITLES = ['Software Engineer', 'Full Stack Dev', 'Cloud Developer', 'Hacker'] as const;
 const CATEGORIES = ['About Me', 'Projects', 'Homelab', 'Contact Me'] as const;
 
@@ -161,7 +163,14 @@ function ProjectCard({ project }: { project: typeof personalInfo.projects[number
 
 function HomelabServiceCard({ service }: { service: typeof personalInfo.homelabServices[number] }) {
   return (
-    <a
+    <motion.a
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ 
+        y: -2,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+      }}
       href={service.link}
       target="_blank"
       rel="noopener noreferrer"
@@ -174,15 +183,6 @@ function HomelabServiceCard({ service }: { service: typeof personalInfo.homelabS
         display: 'flex',
         alignItems: 'center',
         gap: 16,
-        transition: 'all 0.3s',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
       }}
     >
       {/* Left column: Logo or Icon */}
@@ -231,7 +231,7 @@ function HomelabServiceCard({ service }: { service: typeof personalInfo.homelabS
           {service.description}
         </p>
       </div>
-    </a>
+    </motion.a>
   );
 }
 
@@ -241,19 +241,25 @@ function PortfolioCard() {
   const isMobile = useIsMobile();
   const rotatingTitle = useRotatingTitle(TITLES);
 
-  const containerStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: 16,
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    transition: 'all 0.7s ease-in-out',
-    width: '100%',
-    maxWidth: isExpanded ? (isMobile ? '100%' : 896) : (isMobile ? '100%' : 448),
-    height: isExpanded ? '90vh' : 'auto',
-    overflowY: isExpanded ? 'auto' : 'visible',
-  };
-
   return (
-    <div style={containerStyle}>
+    <motion.div
+      layout
+      initial={false}
+      animate={{
+        maxWidth: isExpanded ? (isMobile ? '100%' : 896) : (isMobile ? '100%' : 448),
+        height: isExpanded ? '90vh' : 'auto',
+      }}
+      transition={{
+        layout: { duration: 0.5, type: 'spring', bounce: 0.2 },
+      }}
+      style={{
+        background: 'white',
+        borderRadius: 16,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        width: '100%',
+        overflowY: isExpanded ? 'auto' : 'visible',
+      }}
+    >
       {/* Header / Business Card */}
       <div
         style={{
@@ -339,7 +345,9 @@ function PortfolioCard() {
         </div>
 
         {!isExpanded && (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsExpanded(true)}
             style={{
               position: 'absolute',
@@ -351,264 +359,291 @@ function PortfolioCard() {
               borderRadius: '50%',
               border: 'none',
               cursor: 'pointer',
-              transition: 'all 0.3s',
               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <ChevronRight style={{ width: 24, height: 24 }} />
-          </button>
+            <motion.div
+              animate={{ rotate: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <ChevronRight style={{ width: 24, height: 24 }} />
+            </motion.div>
+          </motion.button>
         )}
       </div>
 
       {/* Expanded Content */}
-      {isExpanded && (
-        <div style={{ padding: isMobile ? 16 : 32 }}>
-          {/* Tab Navigation */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              overflowX: isMobile ? 'auto' : 'visible',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            style={{ padding: isMobile ? 16 : 32 }}
           >
-            {CATEGORIES.map((category, idx) => (
-              <button
-                key={category}
-                onClick={() => setActiveTab(idx)}
-                style={{
-                  padding: isMobile ? '8px 12px' : '10px 20px',
-                  fontSize: isMobile ? 12 : 14,
-                  fontWeight: 500,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  border: 'none',
-                  outline: 'none',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  background: activeTab === idx ? '#9333ea' : 'transparent',
-                  color: activeTab === idx ? 'white' : '#6b7280',
-                  transition: 'all 0.3s',
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== idx) {
-                    e.currentTarget.style.background = '#e5e7eb';
-                    e.currentTarget.style.color = '#374151';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== idx) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#6b7280';
-                  }
-                }}
+            {/* Tab Navigation */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
+              style={{
+                display: 'flex',
+                gap: 8,
+                overflowX: isMobile ? 'auto' : 'visible',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+              }}
+            >
+              {CATEGORIES.map((category, idx) => (
+                <motion.button
+                  key={category}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + idx * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveTab(idx)}
+                  style={{
+                    padding: isMobile ? '8px 12px' : '10px 20px',
+                    fontSize: isMobile ? 12 : 14,
+                    fontWeight: 500,
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    border: 'none',
+                    outline: 'none',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    background: activeTab === idx ? '#9333ea' : 'transparent',
+                    color: activeTab === idx ? 'white' : '#6b7280',
+                    transition: 'all 0.3s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== idx) {
+                      e.currentTarget.style.background = '#e5e7eb';
+                      e.currentTarget.style.color = '#374151';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== idx) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#6b7280';
+                    }
+                  }}
+                >
+                  {category}
+                </motion.button>
+              ))}
+            </motion.div>
+
+            {/* Tab Panels */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                style={{ marginTop: 24 }}
               >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Panels */}
-          <div style={{ marginTop: 24 }}>
-            {/* About Me Panel */}
-            {activeTab === 0 && (
-              <div>
-                <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                  About Me
-                </h2>
-                <p style={{ color: '#374151', lineHeight: 1.6, fontSize: 16, marginBottom: 20 }}>
-                  {personalInfo.aboutMe}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <a
-                    href={personalInfo.resumeLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      background: '#9333ea',
-                      color: 'white',
-                      padding: '12px 24px',
-                      borderRadius: 8,
-                      textDecoration: 'none',
-                      fontWeight: 500,
-                      fontSize: 16,
-                      transition: 'all 0.3s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#7e22ce';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#9333ea';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    <FileText style={{ width: 20, height: 20 }} />
-                    View My Resume
-                  </a></div>
-              </div>
-            )}
-
-            {/* Projects Panel */}
-            {activeTab === 1 && (
-              <div>
-                <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                  Projects
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {personalInfo.projects.map((project, idx) => (
-                    <ProjectCard key={idx} project={project} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Homelab Panel */}
-            {activeTab === 2 && (
-              <div>
-                <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 12 }}>
-                  Homelab
-                </h2>
-                <div
-                  style={{
-                    background: '#f0f9ff',
-                    border: '1px solid #bae6fd',
-                    borderRadius: 12,
-                    padding: 16,
-                    marginBottom: 20,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <Server style={{ width: 20, height: 20, color: '#0369a1' }} />
-                    <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0c4a6e', margin: 0 }}>
-                      Self-Hosting Enthusiast
-                    </h3>
-                  </div>
-                  <p style={{ color: '#0c4a6e', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                    {notes.homelabIntro}
-                  </p>
-                </div>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#111827', marginBottom: 12 }}>
-                  Services I Self-Host
-                </h3>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-                    gap: 12,
-                  }}
-                >
-                  {personalInfo.homelabServices.map((service, idx) => (
-                    <HomelabServiceCard key={idx} service={service} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Contact Me Panel */}
-            {activeTab === 3 && (
-              <div>
-                <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                  Contact Me
-                </h2>
-                <p style={{ color: '#4b5563', fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
-                  Feel free to reach out to me through any of the following platforms. I'm always open to discussing new projects, creative ideas, or opportunities.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {personalInfo.socialLinks.map((link, idx) => {
-                    const IconComponent = link.icon;
-                    return (
-                      <a
-                        key={idx}
-                        href={link.url}
+                {/* About Me Panel */}
+                {activeTab === 0 && (
+                  <div>
+                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
+                      About Me
+                    </h2>
+                    <p style={{ color: '#374151', lineHeight: 1.6, fontSize: 16, marginBottom: 20 }}>
+                      {personalInfo.aboutMe}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <motion.a
+                        whileHover={{ 
+                          scale: 1.05,
+                          y: -2,
+                          backgroundColor: '#7e22ce'
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        href={personalInfo.resumeLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
-                          display: 'flex',
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          gap: 16,
-                          padding: 16,
-                          background: '#f9fafb',
-                          borderRadius: 12,
-                          border: '1px solid #e5e7eb',
+                          gap: 8,
+                          background: '#9333ea',
+                          color: 'white',
+                          padding: '12px 24px',
+                          borderRadius: 8,
                           textDecoration: 'none',
-                          transition: 'all 0.3s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateX(8px)';
-                          e.currentTarget.style.borderColor = link.color;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateX(0)';
-                          e.currentTarget.style.borderColor = '#e5e7eb';
+                          fontWeight: 500,
+                          fontSize: 16,
                         }}
                       >
-                        <div
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 12,
-                            background: `${link.color}15`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <IconComponent style={{ width: 24, height: 24, color: link.color }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#111827', margin: 0 }}>
-                            {link.name}
-                          </h3>
-                          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-                            {link.url.replace('mailto:', '').replace('https://', '')}
-                          </p>
-                        </div>
-                        <ExternalLink style={{ width: 20, height: 20, color: '#9ca3af' }} />
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+                        <FileText style={{ width: 20, height: 20 }} />
+                        View My Resume
+                      </motion.a>
+                    </div>
+                  </div>
+                )}
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              paddingTop: isMobile ? 16 : 24,
-              marginTop: 24,
-            }}
-          >
-            <button
-              onClick={() => setIsExpanded(false)}
+                {/* Projects Panel */}
+                {activeTab === 1 && (
+                  <div>
+                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
+                      Projects
+                    </h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {personalInfo.projects.map((project, idx) => (
+                        <ProjectCard key={idx} project={project} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Homelab Panel */}
+                {activeTab === 2 && (
+                  <div>
+                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 12 }}>
+                      Homelab
+                    </h2>
+                    <div
+                      style={{
+                        background: '#f0f9ff',
+                        border: '1px solid #bae6fd',
+                        borderRadius: 12,
+                        padding: 16,
+                        marginBottom: 20,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <Server style={{ width: 20, height: 20, color: '#0369a1' }} />
+                        <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0c4a6e', margin: 0 }}>
+                          Self-Hosting Enthusiast
+                        </h3>
+                      </div>
+                      <p style={{ color: '#0c4a6e', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                        {notes.homelabIntro}
+                      </p>
+                    </div>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, color: '#111827', marginBottom: 12 }}>
+                      Services I Self-Host
+                    </h3>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                        gap: 12,
+                      }}
+                    >
+                      {personalInfo.homelabServices.map((service, idx) => (
+                        <HomelabServiceCard key={idx} service={service} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact Me Panel */}
+                {activeTab === 3 && (
+                  <div>
+                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
+                      Contact Me
+                    </h2>
+                    <p style={{ color: '#4b5563', fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+                      Feel free to reach out to me through any of the following platforms. I'm always open to discussing new projects, creative ideas, or opportunities.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {personalInfo.socialLinks.map((link, idx) => {
+                        const IconComponent = link.icon;
+                        return (
+                          <motion.a
+                            key={idx}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            whileHover={{ 
+                              x: 8,
+                              borderColor: link.color
+                            }}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 16,
+                              padding: 16,
+                              background: '#f9fafb',
+                              borderRadius: 12,
+                              border: '1px solid #e5e7eb',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 12,
+                                background: `${link.color}15`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <IconComponent style={{ width: 24, height: 24, color: link.color }} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <h3 style={{ fontSize: 16, fontWeight: 600, color: '#111827', margin: 0 }}>
+                                {link.name}
+                              </h3>
+                              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
+                                {link.url.replace('mailto:', '').replace('https://', '')}
+                              </p>
+                            </div>
+                            <ExternalLink style={{ width: 20, height: 20, color: '#9ca3af' }} />
+                          </motion.a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            <div
               style={{
-                color: '#9333ea',
-                fontWeight: 200,
                 display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: isMobile ? 14 : 16,
+                justifyContent: 'center',
+                paddingTop: isMobile ? 16 : 24,
+                marginTop: 24,
               }}
-            > 
-              <ChevronRight style={{ width: 20, height: 20, transform: 'rotate(180deg)' }} />
-              Back
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+            >
+              <motion.button
+                whileHover={{ x: -5 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsExpanded(false)}
+                style={{
+                  color: '#9333ea',
+                  fontWeight: 200,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: isMobile ? 14 : 16,
+                }}
+              > 
+                <ChevronRight style={{ width: 20, height: 20, transform: 'rotate(180deg)' }} />
+                Back
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
