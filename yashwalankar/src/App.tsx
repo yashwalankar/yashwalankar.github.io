@@ -4,7 +4,7 @@ import {
   FileText, ChevronRight, ArrowRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { personalInfo, writingPosts, aiToolkit } from './deets';
+import { personalInfo, myWriting, bookmarks, aiToolkit } from './deets';
 import { submitContact, trackResumeDownload, incrementViewCount, ContactPayload } from './api';
 import './App.css';
 
@@ -27,8 +27,8 @@ const F = {
   mono:    `'JetBrains Mono', ui-monospace, Menlo, monospace`,
 } as const;
 
-type Route = 'About' | 'Projects' | 'Homelab' | 'AI Toolkit' | 'Writing' | 'Contact';
-const ROUTES: Route[] = ['About', 'Projects', 'Homelab', 'AI Toolkit', 'Writing', 'Contact'];
+type Route = 'About' | 'Projects' | 'Homelab' | 'AI Toolkit' | 'Reads' | 'Contact';
+const ROUTES: Route[] = ['About', 'Projects', 'Homelab', 'AI Toolkit', 'Reads', 'Contact'];
 const SUBTITLE = 'Software Engineer';
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
@@ -469,6 +469,35 @@ function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
         {aiToolkit.intro}
       </p>
 
+      {/* Unified tools table */}
+      <div style={{ marginTop: 26 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+          <PaperLabel>Tools & integrations</PaperLabel>
+          <PaperLabel>Name · Role · Type</PaperLabel>
+        </div>
+        <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
+          {aiToolkit.tools.map((t, i) => (
+            <div key={t.name} style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '140px 1fr 120px',
+              gap: 12,
+              padding: '11px 14px',
+              alignItems: 'center',
+              borderTop: i === 0 ? 'none' : `1px solid ${T.hair}`,
+              background: i % 2 ? T.bgWarm : 'transparent',
+            }}>
+              <div style={{ fontFamily: F.mono, fontSize: 12, fontWeight: 500, color: T.ink }}>{t.name}</div>
+              <div style={{ fontSize: 12.5, color: T.ink, lineHeight: 1.45 }}>{t.role}</div>
+              <div style={{
+                fontFamily: F.mono, fontSize: 9.5, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: T.sub,
+                textAlign: isMobile ? 'left' : 'right',
+              }}>{t.type}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Models table */}
       <div style={{ marginTop: 26 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
@@ -496,71 +525,6 @@ function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
           ))}
         </div>
       </div>
-
-      {/* MCPs + Agents */}
-      <div style={{
-        marginTop: 26,
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr',
-        gap: 22,
-      }}>
-        {/* MCP servers */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-            <PaperLabel>MCP servers · {aiToolkit.mcps.length}</PaperLabel>
-            <PaperLabel>Model Context Protocol</PaperLabel>
-          </div>
-          <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
-            {aiToolkit.mcps.map((m, i) => (
-              <div key={m.name} style={{
-                display: 'grid',
-                gridTemplateColumns: '120px 1fr 72px',
-                gap: 10,
-                padding: '10px 14px',
-                alignItems: 'center',
-                borderTop: i === 0 ? 'none' : `1px dashed ${T.hair}`,
-              }}>
-                <div style={{ fontFamily: F.mono, fontSize: 12, color: T.ink }}>
-                  <span style={{ color: T.sub }}>@</span>{m.name}
-                </div>
-                <div style={{ fontSize: 12, color: T.sub, lineHeight: 1.45 }}>{m.scope}</div>
-                <div style={{
-                  fontFamily: F.mono, fontSize: 9.5, letterSpacing: '0.08em',
-                  textTransform: 'uppercase', color: T.sub, textAlign: 'right',
-                }}>{m.trust}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Agents + Principles */}
-        <div>
-          <PaperLabel style={{ marginBottom: 10 }}>Agents & clients</PaperLabel>
-          <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
-            {aiToolkit.agents.map((a, i) => (
-              <div key={a.name} style={{
-                padding: '11px 14px',
-                borderTop: i === 0 ? 'none' : `1px dashed ${T.hair}`,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: T.ink }}>{a.name}</div>
-                  <div style={{ fontFamily: F.mono, fontSize: 9.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.sub }}>
-                    {a.type}
-                  </div>
-                </div>
-                <div style={{ fontSize: 12, color: T.sub, marginTop: 2 }}>{a.role}</div>
-              </div>
-            ))}
-          </div>
-
-          <PaperLabel style={{ marginTop: 20, marginBottom: 10 }}>Principles</PaperLabel>
-          <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, lineHeight: 1.65, color: T.ink }}>
-            {aiToolkit.practices.map(p => (
-              <li key={p} style={{ marginBottom: 6 }}>{p}</li>
-            ))}
-          </ol>
-        </div>
-      </div>
     </>
   );
 }
@@ -568,28 +532,111 @@ function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
 function PaperWriting() {
   return (
     <>
-      <SectionHead num="05 / 06" kicker="Writing" title="Notes & essays." />
-      {writingPosts.map((w, i) => (
-        <div key={w.title} style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto auto',
-          gap: 12,
-          alignItems: 'baseline',
-          padding: '18px 0',
-          borderTop: i === 0 ? `1px solid ${T.hairStrong}` : `1px solid ${T.hair}`,
-          cursor: 'pointer',
-        }}>
-          <div style={{ fontFamily: F.display, fontSize: 18, fontWeight: 500, letterSpacing: '-0.01em', color: T.ink }}>
-            {w.title}
-          </div>
-          <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, whiteSpace: 'nowrap' }}>
-            {w.readTime}
-          </div>
-          <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, width: 76, textAlign: 'right' }}>
-            {w.date}
-          </div>
+      <SectionHead num="05 / 06" kicker="Reads" title="Notes & essays." />
+
+      {/* My Writing */}
+      <PaperLabel style={{ marginBottom: 0 }}>My Writing · {myWriting.length}</PaperLabel>
+      {myWriting.length === 0 ? (
+        <div style={{ borderTop: `1px solid ${T.hair}`, padding: '20px 0', fontFamily: F.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.sub }}>
+          Nothing here yet.
         </div>
-      ))}
+      ) : myWriting.map((w, i) => {
+        const El = w.link ? 'a' : 'div';
+        const linkProps = w.link
+          ? { href: w.link, target: '_blank', rel: 'noopener noreferrer' }
+          : {};
+        return (
+          <El
+            key={w.title}
+            {...(linkProps as any)}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto auto',
+              gap: 12,
+              alignItems: 'baseline',
+              padding: '16px 0',
+              borderTop: i === 0 ? `1px solid ${T.hairStrong}` : `1px solid ${T.hair}`,
+              textDecoration: 'none',
+              cursor: w.link ? 'pointer' : 'default',
+            }}
+          >
+            <div style={{
+              fontFamily: F.display,
+              fontSize: 17,
+              fontWeight: 500,
+              letterSpacing: '-0.01em',
+              color: T.ink,
+              opacity: w.link ? 1 : 0.55,
+            }}>
+              {w.title}
+            </div>
+            {w.source && (
+              <div style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.sub, whiteSpace: 'nowrap' }}>
+                {w.source}
+              </div>
+            )}
+            {w.date && (
+              <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, width: 72, textAlign: 'right' }}>
+                {w.date}
+              </div>
+            )}
+          </El>
+        );
+      })}
+
+      {/* Bookmarks */}
+      <PaperLabel style={{ marginTop: 28, marginBottom: 0 }}>Bookmarks · {bookmarks.length}</PaperLabel>
+      {bookmarks.length === 0 ? (
+        <div style={{ borderTop: `1px solid ${T.hair}`, padding: '20px 0', fontFamily: F.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.sub }}>
+          No bookmarks yet.
+        </div>
+      ) : bookmarks.map((b, i) => {
+        const El = b.link ? 'a' : 'div';
+        const linkProps = b.link
+          ? { href: b.link, target: '_blank', rel: 'noopener noreferrer' }
+          : {};
+        return (
+          <El
+            key={b.title}
+            {...(linkProps as any)}
+            style={{
+              display: 'block',
+              padding: '16px 0',
+              borderTop: i === 0 ? `1px solid ${T.hairStrong}` : `1px solid ${T.hair}`,
+              textDecoration: 'none',
+              cursor: b.link ? 'pointer' : 'default',
+            }}
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'baseline' }}>
+              <div style={{
+                fontFamily: F.display,
+                fontSize: 17,
+                fontWeight: 500,
+                letterSpacing: '-0.01em',
+                color: T.ink,
+                opacity: b.link ? 1 : 0.55,
+              }}>
+                {b.title}
+              </div>
+              {b.source && (
+                <div style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.sub, whiteSpace: 'nowrap' }}>
+                  {b.source}
+                </div>
+              )}
+              {b.date && (
+                <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, width: 72, textAlign: 'right' }}>
+                  {b.date}
+                </div>
+              )}
+            </div>
+            {b.tags && b.tags.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                {b.tags.map(tag => <PaperChip key={tag}>{tag}</PaperChip>)}
+              </div>
+            )}
+          </El>
+        );
+      })}
     </>
   );
 }
@@ -786,7 +833,7 @@ function SectionContent({ route, isMobile }: { route: Route; isMobile: boolean }
         {route === 'Projects'   && <PaperProjects />}
         {route === 'Homelab'    && <PaperHomelab isMobile={isMobile} />}
         {route === 'AI Toolkit' && <PaperAIToolkit isMobile={isMobile} />}
-        {route === 'Writing'    && <PaperWriting />}
+        {route === 'Reads'      && <PaperWriting />}
         {route === 'Contact'    && <PaperContact isMobile={isMobile} />}
       </motion.div>
     </AnimatePresence>

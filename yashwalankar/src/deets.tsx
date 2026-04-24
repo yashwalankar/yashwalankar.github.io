@@ -22,12 +22,16 @@ import wireguardIcon from './media/icons/wireguard.png'
 export const notes = {
   homelabIntro: "I self-host everything I reasonably can. My homelab is both a learning sandbox and a production setup for my household — built around data ownership, privacy, and control over my software stack.",
 }
-// TODO : Add Links
-export const writingPosts = [
-  { title: 'Exactly-once is a lie — and what to do instead',     date: 'Mar 2026', readTime: '8 min' },
-  { title: "My homelab runs on 116W. Here's the breakdown",       date: 'Jan 2026', readTime: '5 min' },
-  { title: 'Writing Postgres migrations that actually roll back',  date: 'Nov 2025', readTime: '6 min' },
-  { title: 'A cron scheduler is a database in disguise',          date: 'Aug 2025', readTime: '4 min' },
+export const myWriting: { title: string; link: string; source?: string; date?: string }[] = [
+  // { title: 'Exactly-once is a lie — and what to do instead',    link: '', source: 'Medium', date: 'Mar 2026' },
+  // { title: "My homelab runs on 116W. Here's the breakdown",     link: '', source: 'Medium', date: 'Jan 2026' },
+  // { title: 'Writing Postgres migrations that actually roll back', link: '', source: 'Medium', date: 'Nov 2025' },
+  // { title: 'A cron scheduler is a database in disguise',        link: '', source: 'Medium', date: 'Aug 2025' },
+];
+
+export const bookmarks: { title: string; link: string; source?: string; date?: string; tags?: string[] }[] = [
+  // { title: 'The Log: What every software engineer should know about real-time data', link: 'https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying', source: 'LinkedIn Eng', date: 'Dec 2025', tags: ['distributed systems', 'data'] },
+  // { title: 'Designing Data-Intensive Applications — chapter notes', link: '', source: 'book', date: 'Nov 2025', tags: ['databases', 'architecture'] },
 ];
 
 export const personalInfo = {
@@ -124,32 +128,26 @@ export const personalInfo = {
 
 export const aiToolkit = {
   intro: 'I build with AI daily — writing code, wiring agents into real systems, and letting models poke at my homelab. My setup leans on open standards (MCP) so tools compose instead of locking me in.',
+  tools: [
+    // Clients & agents
+    { name: 'Claude Code',       role: 'CLI coding agent with skills, hooks & MCP', type: 'IDE Agent'      },
+    { name: 'Cursor',            role: 'Day-to-day editor',                          type: 'IDE'            },
+    { name: 'Open WebUI',        role: 'Private chat UI over Ollama',                type: 'Chat'           },
+    { name: 'n8n',               role: 'Agentic workflows + cron triggers',          type: 'Automation'     },
+    // MCP servers
+    { name: '@filesystem',       role: 'Read/write scoped project dirs',             type: 'MCP · local'    },
+    { name: '@github',           role: 'PRs, issues, code search',                  type: 'MCP · token'    },
+    { name: '@postgres',         role: 'Read-only analytics queries',               type: 'MCP · RO'       },
+    { name: '@linear',           role: 'Ticket CRUD + sprint queries',              type: 'MCP · token'    },
+    { name: '@playwright',       role: 'Browser automation for scrapers',           type: 'MCP · local'    },
+    { name: '@homelab-status',   role: 'Query Uptime Kuma + Grafana',               type: 'MCP · LAN'      },
+    { name: '@memory',           role: 'Cross-session notes + facts',               type: 'MCP · local'    },
+    { name: '@fetch',            role: 'URL retrieval w/ allow-list',               type: 'MCP · sandboxed'},
+  ],
   models: [
     { name: 'Claude Sonnet 4.5', vendor: 'Anthropic', use: 'Primary coding + long-context refactors',   via: 'API · Cursor' },
     { name: 'GPT-5',             vendor: 'OpenAI',    use: 'Second opinion, planning, image reasoning', via: 'API' },
     { name: 'Llama 3.1 70B',     vendor: 'Meta',      use: 'Local inference for private data',          via: 'Ollama · homelab' },
     { name: 'Qwen 2.5 Coder',    vendor: 'Alibaba',   use: 'Local code-completion / autocomplete',      via: 'Ollama · homelab' },
-  ],
-  agents: [
-    { name: 'Claude Code', role: 'CLI + editor coding agent',         type: 'IDE'        },
-    { name: 'Cursor',      role: 'Day-to-day editor',                 type: 'IDE'        },
-    { name: 'Open WebUI',  role: 'Private chat UI over Ollama',       type: 'chat'       },
-    { name: 'n8n',         role: 'Agentic workflows + cron triggers', type: 'automation' },
-  ],
-  mcps: [
-    { name: 'filesystem',     scope: 'Read/write scoped project dirs',  trust: 'local'     },
-    { name: 'github',         scope: 'PRs, issues, code search',        trust: 'token'     },
-    { name: 'postgres',       scope: 'Read-only analytics queries',     trust: 'RO'        },
-    { name: 'linear',         scope: 'Ticket CRUD + sprint queries',    trust: 'token'     },
-    { name: 'playwright',     scope: 'Browser automation for scrapers', trust: 'local'     },
-    { name: 'homelab-status', scope: 'Query Uptime Kuma + Grafana',     trust: 'LAN'       },
-    { name: 'memory',         scope: 'Cross-session notes + facts',     trust: 'local'     },
-    { name: 'fetch',          scope: 'URL retrieval w/ allow-list',     trust: 'sandboxed' },
-  ],
-  practices: [
-    'Every prompt that ships as code gets committed alongside the diff.',
-    'No cloud-model access to secrets — local Llama handles sensitive data.',
-    'Evals before deploys: small golden-set before any agent touches prod.',
-    'MCP tools preferred over bespoke plugins — portable across clients.',
   ],
 };
