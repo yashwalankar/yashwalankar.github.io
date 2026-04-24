@@ -1,645 +1,1054 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Mail, Linkedin, Github, MapPin, ExternalLink, Server, FileText } from 'lucide-react';
+import {
+  Mail, Linkedin, Github, MapPin, ExternalLink,
+  FileText, ChevronRight, ArrowRight,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { personalInfo, notes } from './deets'
+import { personalInfo, notes, writingPosts, aiToolkit } from './deets';
+import { submitContact, trackResumeDownload, incrementViewCount, ContactPayload } from './api';
+import './App.css';
 
-const TITLES = ['Software Engineer', 'Full Stack Dev', 'Cloud Developer', 'Hacker'] as const;
-const CATEGORIES = ['About Me', 'Projects', 'Homelab', 'Contact Me'] as const;
+// ── Theme ────────────────────────────────────────────────────────────────────
+const T = {
+  bg:          '#f4f1ec',
+  card:        '#ffffff',
+  ink:         '#1c1a17',
+  sub:         '#6b635a',
+  hair:        '#e4ded4',
+  hairStrong:  '#c9c0b2',
+  chipBg:      '#f0ebe1',
+  green:       '#3d8a5b',
+} as const;
 
+const F = {
+  display: `'Fraunces', 'Iowan Old Style', Georgia, serif`,
+  body:    `'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif`,
+  mono:    `'JetBrains Mono', ui-monospace, Menlo, monospace`,
+} as const;
 
+type Route = 'About' | 'Projects' | 'Homelab' | 'AI Toolkit' | 'Writing' | 'Contact';
+const ROUTES: Route[] = ['About', 'Projects', 'Homelab', 'AI Toolkit', 'Writing', 'Contact'];
+
+// ── Hooks ────────────────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < breakpoint : false
   );
-
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < breakpoint);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const handle = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
   }, [breakpoint]);
-
   return isMobile;
 }
 
-function useRotatingTitle(titles: readonly string[], delay = 2000) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setIndex(prev => (prev + 1) % titles.length);
-    }, delay);
-    return () => clearInterval(id);
-  }, [titles, delay]);
-
-  return titles[index];
-}
-
-function Avatar({ name, initials, src, size }: { name: string; initials: string; src?: string; size: number }) {
-  const baseStyle: React.CSSProperties = {
-    width: size,
-    height: size,
-    borderRadius: '50%',
-    marginBottom: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    fontWeight: 'bold',
-    overflow: 'hidden',
-    flexShrink: 0,
-    fontSize: size * 0.3,
-    background: src
-      ? 'transparent'
-      : 'linear-gradient(to bottom right, #a855f7, #ec4899)',
-  };
-
+// ── Primitives ───────────────────────────────────────────────────────────────
+function PaperLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={baseStyle}>
-      {src ? (
-        <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      ) : (
-        initials
-      )}
+    <div style={{
+      fontFamily: F.mono,
+      fontSize: 10,
+      letterSpacing: '0.14em',
+      textTransform: 'uppercase',
+      color: T.sub,
+      ...style,
+    }}>
+      {children}
     </div>
   );
 }
 
-function SocialLinks({ email, linkedin, github }: { email: string; linkedin: string; github: string }) {
-  const iconStyle: React.CSSProperties = {
-    color: '#4b5563',
-    transition: 'color 0.3s',
-    display: 'inline-flex',
-  };
+function PaperChip({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '3px 8px',
+      background: T.chipBg,
+      color: T.ink,
+      fontSize: 11,
+      fontFamily: F.mono,
+      letterSpacing: '0.02em',
+      borderRadius: 2,
+      marginRight: 4,
+      marginBottom: 4,
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function AvatarMono({ size, initials, src }: { size: number; initials: string; src?: string }) {
+  const [imgError, setImgError] = useState(false);
+  const showImage = src && !imgError;
 
   return (
-    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-      <a href={`mailto:${email}`} style={iconStyle}>
-        <Mail style={{ width: 20, height: 20 }} />
-      </a>
-      <a href={linkedin} target="_blank" rel="noopener noreferrer" style={iconStyle}>
-        <Linkedin style={{ width: 20, height: 20 }} />
-      </a>
-      <a href={github} target="_blank" rel="noopener noreferrer" style={iconStyle}>
-        <Github style={{ width: 20, height: 20 }} />
-      </a>
+    <div style={{
+      width: size,
+      height: size,
+      borderRadius: '50%',
+      flexShrink: 0,
+      background: 'repeating-linear-gradient(135deg, #eee7d8 0 6px, #e5dcc8 6px 12px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#3a2f22',
+      fontFamily: F.mono,
+      fontSize: size * 0.32,
+      fontWeight: 500,
+      letterSpacing: '0.02em',
+      overflow: 'hidden',
+    }}>
+      {showImage
+        ? <img src={src} alt={initials} onError={() => setImgError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : initials}
     </div>
   );
 }
 
-function ProjectCard({ project }: { project: typeof personalInfo.projects[number] }) {
+function SectionHead({ num, kicker, title }: { num: string; kicker: string; title: React.ReactNode }) {
   return (
-    <div
-      style={{
-        background: '#f9fafb',
-        padding: 20,
-        borderRadius: 12,
-        border: '1px solid #e5e7eb',
-      }}
-    >
-      <h3 style={{ fontSize: 18, fontWeight: 600, color: '#111827', marginBottom: 8 }}>
-        {project.name}
-      </h3>
-      <p style={{ color: '#4b5563', fontSize: 14, marginBottom: 12, lineHeight: 1.6 }}>
-        {project.description}
+    <header style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <PaperLabel>{kicker}</PaperLabel>
+        <PaperLabel>{num}</PaperLabel>
+      </div>
+      <h1 style={{
+        fontFamily: F.display,
+        fontSize: 36,
+        lineHeight: 1.05,
+        margin: '10px 0 0',
+        letterSpacing: '-0.02em',
+        fontWeight: 500,
+        color: T.ink,
+      }}>
+        {title}
+      </h1>
+      <div style={{ height: 1, background: T.hairStrong, marginTop: 16 }} />
+    </header>
+  );
+}
+
+function PaperInput({
+  label, placeholder, textarea = false, name,
+}: {
+  label: string; placeholder: string; textarea?: boolean; name: string;
+}) {
+  const El = textarea ? 'textarea' : 'input';
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <PaperLabel>{label}</PaperLabel>
+      <El
+        name={name}
+        placeholder={placeholder}
+        required
+        rows={textarea ? 4 : undefined}
+        style={{
+          width: '100%',
+          boxSizing: 'border-box' as const,
+          padding: '10px 0',
+          border: 'none',
+          borderBottom: `1px solid ${T.hairStrong}`,
+          fontFamily: F.body,
+          fontSize: 13.5,
+          color: T.ink,
+          background: 'transparent',
+          outline: 'none',
+          resize: textarea ? ('vertical' as const) : ('none' as const),
+        }}
+      />
+    </label>
+  );
+}
+
+// ── Section panels ────────────────────────────────────────────────────────────
+
+function PaperAbout({ isMobile }: { isMobile: boolean }) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleResume() {
+    setLoading(true);
+    await trackResumeDownload();
+    window.open(personalInfo.resumeLink, '_blank', 'noopener,noreferrer');
+    setLoading(false);
+  }
+
+  return (
+    <>
+      <SectionHead num="01 / 06" kicker="About" title={<>Building quiet systems<br />that don't page you at 3am.</>} />
+      <p style={{ fontSize: 15, lineHeight: 1.65, maxWidth: 520, color: T.ink }}>
+        {personalInfo.aboutMe}
       </p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-        {project.technologies.map(tech => (
-          <span
-            key={tech}
-            style={{
-              background: '#ede9fe',
-              color: '#6b21a8',
-              padding: '4px 10px',
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 500,
-            }}
-          >
-            {tech}
-          </span>
+      <div style={{
+        marginTop: 32,
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: isMobile ? 24 : 32,
+      }}>
+        {/* Experience */}
+        <div>
+          <PaperLabel style={{ marginBottom: 10 }}>Experience</PaperLabel>
+          {personalInfo.experience.map((e, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'baseline',
+              padding: '10px 0',
+              borderTop: `1px solid ${T.hair}`,
+            }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: T.ink }}>{e.company}</div>
+                <div style={{ fontSize: 12, color: T.sub }}>{e.role}</div>
+              </div>
+              <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, whiteSpace: 'nowrap' }}>
+                {e.period}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Toolkit + Resume */}
+        <div>
+          <PaperLabel style={{ marginBottom: 10 }}>Toolkit</PaperLabel>
+          <div>
+            {personalInfo.toolkit.map(t => <PaperChip key={t}>{t}</PaperChip>)}
+          </div>
+          <div style={{
+            marginTop: 22,
+            padding: '14px 16px',
+            border: `1px solid ${T.hair}`,
+            borderRadius: 3,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+          }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: T.ink, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <FileText size={13} /> Résumé — 2026.pdf
+              </div>
+              <div style={{ fontSize: 11, color: T.sub, marginTop: 2 }}>Updated Mar 2026</div>
+            </div>
+            <button
+              onClick={handleResume}
+              style={{
+                background: T.ink,
+                color: T.card,
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: F.mono,
+                fontSize: 11,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '8px 12px',
+                borderRadius: 2,
+                flexShrink: 0,
+              }}
+            >
+              {loading ? '…' : 'Download'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PaperProjects() {
+  return (
+    <>
+      <SectionHead num="02 / 06" kicker="Projects" title="Selected work." />
+      <div>
+        {personalInfo.projects.map((p, i) => (
+          <article key={p.name} style={{
+            display: 'grid',
+            gridTemplateColumns: '36px 1fr auto',
+            gap: 16,
+            alignItems: 'start',
+            padding: '20px 0',
+            borderTop: i === 0 ? `1px solid ${T.hairStrong}` : `1px solid ${T.hair}`,
+          }}>
+            <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, paddingTop: 3 }}>
+              №{String(i + 1).padStart(2, '0')}
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                <h3 style={{
+                  fontFamily: F.display,
+                  fontSize: 20,
+                  fontWeight: 500,
+                  letterSpacing: '-0.01em',
+                  color: T.ink,
+                  margin: 0,
+                }}>
+                  {p.name}
+                </h3>
+                {p.year && (
+                  <span style={{ fontFamily: F.mono, fontSize: 11, color: T.sub }}>{p.year}</span>
+                )}
+              </div>
+              <p style={{ fontSize: 13.5, lineHeight: 1.55, color: T.ink, maxWidth: 460, margin: 0 }}>
+                {p.description}
+              </p>
+              <div style={{ marginTop: 10 }}>
+                {p.technologies.map(t => <PaperChip key={t}>{t}</PaperChip>)}
+              </div>
+            </div>
+            {p.link ? (
+              <a
+                href={p.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontFamily: F.mono,
+                  fontSize: 11,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: T.ink,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  marginTop: 6,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Code <ExternalLink size={10} />
+              </a>
+            ) : <div />}
+          </article>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <a
-          href={project.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            color: '#9333ea',
-            fontSize: 14,
-            fontWeight: 500,
-            textDecoration: 'none',
-          }}
-        >
-          <Github style={{ width: 16, height: 16 }} />
-          View Code
-        </a>
-        {project.demo && (
-          <a
-            href={project.demo}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              color: '#9333ea',
-              fontSize: 14,
-              fontWeight: 500,
-              textDecoration: 'none',
-            }}
-          >
-            <ExternalLink style={{ width: 16, height: 16 }} />
-            Live Demo
-          </a>
-        )}
-      </div>
-    </div>
+    </>
   );
 }
 
-function HomelabServiceCard({ service }: { service: typeof personalInfo.homelabServices[number] }) {
+function PaperHomelab({ isMobile }: { isMobile: boolean }) {
+  // Group services by category, preserving insertion order
+  const categories = personalInfo.homelabServices.reduce<Record<string, typeof personalInfo.homelabServices>>((acc, s) => {
+    (acc[s.cat] = acc[s.cat] ?? []).push(s);
+    return acc;
+  }, {});
+  const cats = Object.keys(categories);
+
   return (
-    <motion.a
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ 
-        y: -2,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-      }}
-      href={service.link}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{
-        background: '#f9fafb',
-        padding: 16,
-        borderRadius: 12,
-        border: '1px solid #e5e7eb',
-        textDecoration: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-      }}
-    >
-      {/* Left column: Logo or Icon */}
+    <>
+      <SectionHead num="03 / 06" kicker="Homelab" title="Eleven services, three boxes." />
+      <p style={{ fontSize: 14, lineHeight: 1.6, color: T.sub, maxWidth: 540 }}>
+        {notes.homelabIntro}
+      </p>
+
+      {/* Host strip */}
       <div style={{
-        width: 56,
-        height: 56,
-        flexShrink: 0,
+        marginTop: 20,
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+        gap: 10,
+      }}>
+        {personalInfo.hardware.map(h => (
+          <div key={h.name} style={{
+            border: `1px solid ${T.hair}`,
+            borderRadius: 3,
+            padding: '12px 14px',
+            background: '#fbf8f2',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: T.ink }}>{h.name}</div>
+            <div style={{ fontSize: 11, color: T.sub }}>{h.role}</div>
+            <div style={{ fontFamily: F.mono, fontSize: 10, color: T.sub, marginTop: 4 }}>~{h.watts}W</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Services table */}
+      <div style={{ marginTop: 26 }}>
+        <PaperLabel style={{ marginBottom: 10 }}>
+          Services · {personalInfo.homelabServices.length}
+        </PaperLabel>
+        <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
+          {cats.map((cat, ci) => (
+            <div key={cat} style={{
+              borderTop: ci === 0 ? 'none' : `1px solid ${T.hairStrong}`,
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '110px 1fr',
+            }}>
+              {/* Category label */}
+              <div style={{
+                padding: '14px 14px',
+                background: '#fbf8f2',
+                borderRight: isMobile ? 'none' : `1px solid ${T.hair}`,
+                borderBottom: isMobile ? `1px solid ${T.hair}` : 'none',
+              }}>
+                <div style={{ fontFamily: F.display, fontSize: 14, fontWeight: 500, color: T.ink }}>{cat}</div>
+              </div>
+
+              {/* Service rows */}
+              <div>
+                {categories[cat].map((s, i) => (
+                  <div key={s.name} style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr' : '140px 1fr',
+                    gap: 10,
+                    padding: '10px 14px',
+                    alignItems: 'start',
+                    borderBottom: i === categories[cat].length - 1 ? 'none' : `1px dashed ${T.hair}`,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: T.ink }}>{s.name}</div>
+                      <div style={{ fontFamily: F.mono, fontSize: 10, color: T.sub, marginTop: 2 }}>{s.tag}</div>
+                    </div>
+                    <div style={{ fontSize: 12, color: T.sub, lineHeight: 1.5 }}>{s.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
+  return (
+    <>
+      <SectionHead num="04 / 06" kicker="AI Toolkit" title="How I build with models." />
+      <p style={{ fontSize: 14, lineHeight: 1.65, color: T.sub, maxWidth: 540 }}>
+        {aiToolkit.intro}
+      </p>
+
+      {/* Models table */}
+      <div style={{ marginTop: 26 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+          <PaperLabel>Models in rotation</PaperLabel>
+          <PaperLabel>Cloud + local</PaperLabel>
+        </div>
+        <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
+          {aiToolkit.models.map((m, i) => (
+            <div key={m.name} style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1.3fr 160px',
+              gap: 12,
+              padding: '13px 16px',
+              alignItems: 'center',
+              borderTop: i === 0 ? 'none' : `1px solid ${T.hair}`,
+              background: i % 2 ? '#fbf8f2' : 'transparent',
+            }}>
+              <div>
+                <div style={{ fontFamily: F.display, fontSize: 15, fontWeight: 500, color: T.ink }}>{m.name}</div>
+                <div style={{ fontFamily: F.mono, fontSize: 10, color: T.sub, marginTop: 2 }}>{m.vendor}</div>
+              </div>
+              <div style={{ fontSize: 12.5, color: T.ink }}>{m.use}</div>
+              <div style={{ fontFamily: F.mono, fontSize: 10.5, color: T.sub, textAlign: isMobile ? 'left' : 'right' }}>{m.via}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* MCPs + Agents */}
+      <div style={{
+        marginTop: 26,
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr',
+        gap: 22,
+      }}>
+        {/* MCP servers */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+            <PaperLabel>MCP servers · {aiToolkit.mcps.length}</PaperLabel>
+            <PaperLabel>Model Context Protocol</PaperLabel>
+          </div>
+          <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
+            {aiToolkit.mcps.map((m, i) => (
+              <div key={m.name} style={{
+                display: 'grid',
+                gridTemplateColumns: '120px 1fr 72px',
+                gap: 10,
+                padding: '10px 14px',
+                alignItems: 'center',
+                borderTop: i === 0 ? 'none' : `1px dashed ${T.hair}`,
+              }}>
+                <div style={{ fontFamily: F.mono, fontSize: 12, color: T.ink }}>
+                  <span style={{ color: T.sub }}>@</span>{m.name}
+                </div>
+                <div style={{ fontSize: 12, color: T.sub, lineHeight: 1.45 }}>{m.scope}</div>
+                <div style={{
+                  fontFamily: F.mono, fontSize: 9.5, letterSpacing: '0.08em',
+                  textTransform: 'uppercase', color: T.sub, textAlign: 'right',
+                }}>{m.trust}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Agents + Principles */}
+        <div>
+          <PaperLabel style={{ marginBottom: 10 }}>Agents & clients</PaperLabel>
+          <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
+            {aiToolkit.agents.map((a, i) => (
+              <div key={a.name} style={{
+                padding: '11px 14px',
+                borderTop: i === 0 ? 'none' : `1px dashed ${T.hair}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: T.ink }}>{a.name}</div>
+                  <div style={{ fontFamily: F.mono, fontSize: 9.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.sub }}>
+                    {a.type}
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: T.sub, marginTop: 2 }}>{a.role}</div>
+              </div>
+            ))}
+          </div>
+
+          <PaperLabel style={{ marginTop: 20, marginBottom: 10 }}>Principles</PaperLabel>
+          <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, lineHeight: 1.65, color: T.ink }}>
+            {aiToolkit.practices.map(p => (
+              <li key={p} style={{ marginBottom: 6 }}>{p}</li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PaperWriting() {
+  return (
+    <>
+      <SectionHead num="05 / 06" kicker="Writing" title="Notes & essays." />
+      {writingPosts.map((w, i) => (
+        <div key={w.title} style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr auto auto',
+          gap: 12,
+          alignItems: 'baseline',
+          padding: '18px 0',
+          borderTop: i === 0 ? `1px solid ${T.hairStrong}` : `1px solid ${T.hair}`,
+          cursor: 'pointer',
+        }}>
+          <div style={{ fontFamily: F.display, fontSize: 18, fontWeight: 500, letterSpacing: '-0.01em', color: T.ink }}>
+            {w.title}
+          </div>
+          <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, whiteSpace: 'nowrap' }}>
+            {w.readTime}
+          </div>
+          <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, width: 76, textAlign: 'right' }}>
+            {w.date}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function PaperContact({ isMobile }: { isMobile: boolean }) {
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus('sending');
+    const fd = new FormData(e.currentTarget);
+    const payload: ContactPayload = {
+      name:    fd.get('name')    as string,
+      email:   fd.get('email')   as string,
+      subject: fd.get('subject') as string,
+      message: fd.get('message') as string,
+    };
+    try {
+      await submitContact(payload);
+      setStatus('sent');
+    } catch {
+      setStatus('error');
+    }
+  }
+
+  return (
+    <>
+      <SectionHead num="06 / 06" kicker="Contact" title="Say hello." />
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: isMobile ? 28 : 32,
+      }}>
+        {/* Contact form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <PaperInput label="Name"    name="name"    placeholder="Jane Developer" />
+          <PaperInput label="Email"   name="email"   placeholder="jane@company.com" />
+          <PaperInput label="Subject" name="subject" placeholder="A role on your team" />
+          <PaperInput label="Message" name="message" placeholder="Tell me a little about what you're working on…" textarea />
+          <button
+            type="submit"
+            disabled={status === 'sending' || status === 'sent'}
+            style={{
+              background: T.ink,
+              color: T.card,
+              border: 'none',
+              cursor: status === 'sent' ? 'default' : 'pointer',
+              marginTop: 6,
+              padding: '12px 16px',
+              fontFamily: F.mono,
+              fontSize: 11,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              borderRadius: 2,
+              opacity: status === 'sending' ? 0.6 : 1,
+              transition: 'opacity 0.2s',
+            }}
+          >
+            {status === 'sent' ? 'Sent — thanks' : status === 'sending' ? 'Sending…' : 'Send message'}
+          </button>
+          {status === 'error' && (
+            <div style={{ fontSize: 12, color: '#c0392b', fontFamily: F.mono }}>
+              Something went wrong — try emailing directly.
+            </div>
+          )}
+        </form>
+
+        {/* Direct links */}
+        <div>
+          <PaperLabel style={{ marginBottom: 10 }}>Direct</PaperLabel>
+          {([
+            { Icon: Mail,     label: 'Email',    value: personalInfo.email,                 href: `mailto:${personalInfo.email}` },
+            { Icon: Linkedin, label: 'LinkedIn', value: 'linkedin.com/in/yashwalankar',    href: personalInfo.linkedin },
+            { Icon: Github,   label: 'GitHub',   value: 'github.com/yashwalankar',         href: personalInfo.github },
+          ] as const).map((r, i) => (
+            <a
+              key={r.label}
+              href={r.href}
+              target={i === 0 ? undefined : '_blank'}
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 0',
+                borderTop: i === 0 ? `1px solid ${T.hairStrong}` : `1px solid ${T.hair}`,
+                textDecoration: 'none',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <r.Icon size={15} color={T.sub} />
+                <div>
+                  <div style={{ fontSize: 11, color: T.sub, fontFamily: F.mono, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{r.label}</div>
+                  <div style={{ fontSize: 13, color: T.ink }}>{r.value}</div>
+                </div>
+              </div>
+              <ExternalLink size={13} color={T.sub} />
+            </a>
+          ))}
+          <div style={{
+            marginTop: 18,
+            padding: 14,
+            border: `1px solid ${T.hair}`,
+            borderRadius: 3,
+            fontSize: 12,
+            color: T.sub,
+            lineHeight: 1.5,
+          }}>
+            Currently in <strong style={{ color: T.ink }}>{personalInfo.location}</strong>.{' '}
+            Typical reply within 24h.
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Intro card ────────────────────────────────────────────────────────────────
+
+function PaperIntroCard({ onOpen, isMobile }: { onOpen: () => void; isMobile: boolean }) {
+  if (isMobile) {
+    return (
+      <div style={{
+        background: T.bg,
+        padding: 18,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: service.logo ? 'transparent' : '#ede9fe',
-        borderRadius: 8,
+        minHeight: '100%',
+        boxSizing: 'border-box',
       }}>
-        {service.logo ? (
-          <img
-            src={service.logo}
-            alt={service.name}
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain'
-            }}
-          />
-        ) : (
-          <span style={{ fontSize: 28 }}>{service.icon}</span>
-        )}
+        <button
+          onClick={onOpen}
+          style={{
+            all: 'unset',
+            cursor: 'pointer',
+            width: '100%',
+            background: T.card,
+            border: `1px solid ${T.hair}`,
+            borderRadius: 4,
+            padding: '26px 22px 22px',
+            boxShadow: '0 30px 60px -40px rgba(0,0,0,0.25)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 14,
+            fontFamily: F.body,
+            color: T.ink,
+            boxSizing: 'border-box',
+          }}
+        >
+          <AvatarMono size={68} initials={personalInfo.initials} src={personalInfo.profileImage} />
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: F.display, fontSize: 26, lineHeight: 1.1, letterSpacing: '-0.01em', fontWeight: 500 }}>
+              {personalInfo.name}
+            </div>
+            <div style={{ marginTop: 4, color: T.sub, fontSize: 12.5 }}>
+              Software Engineer
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, color: T.sub, fontSize: 11.5, alignItems: 'center' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <MapPin size={11} /> {personalInfo.location}
+            </span>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.sub, display: 'inline-block' }} />
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
+              Open to roles
+            </span>
+          </div>
+
+          <div style={{ width: '100%', height: 1, background: T.hair }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ display: 'flex', gap: 14, color: T.ink }}>
+              <span onClick={e => { e.stopPropagation(); window.location.href = `mailto:${personalInfo.email}`; }}>
+                <Mail size={14} />
+              </span>
+              <span onClick={e => { e.stopPropagation(); window.open(personalInfo.linkedin, '_blank'); }}>
+                <Linkedin size={14} />
+              </span>
+              <span onClick={e => { e.stopPropagation(); window.open(personalInfo.github, '_blank'); }}>
+                <Github size={14} />
+              </span>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F.mono, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.ink }}>
+              Open <ArrowRight size={12} />
+            </div>
+          </div>
+        </button>
+      </div>
+    );
+  }
+
+  // Desktop
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        all: 'unset',
+        cursor: 'pointer',
+        width: '100%',
+        padding: '34px 28px 30px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 17,
+        fontFamily: F.body,
+        color: T.ink,
+        boxSizing: 'border-box',
+      }}
+    >
+      <AvatarMono size={82} initials={personalInfo.initials} src={personalInfo.profileImage} />
+
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: F.display, fontSize: 26, lineHeight: 1.1, letterSpacing: '-0.01em', fontWeight: 500 }}>
+          {personalInfo.name}
+        </div>
+        <div style={{ marginTop: 4, color: T.sub, fontSize: 13 }}>
+          Software Engineer
+        </div>
       </div>
 
-      {/* Right column: Name and Description */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{
-          fontSize: 16,
-          fontWeight: 600,
-          color: '#111827',
-          marginBottom: 4,
-          margin: 0
-        }}>
-          {service.name}
-        </h3>
-        <p style={{
-          color: '#6b7280',
-          fontSize: 13,
-          lineHeight: 1.5,
-          margin: 0
-        }}>
-          {service.description}
-        </p>
+      <div style={{ display: 'flex', gap: 14, color: T.sub, fontSize: 12, alignItems: 'center' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <MapPin size={12} /> {personalInfo.location}
+        </span>
+        <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.sub, display: 'inline-block' }} />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
+          Open to roles
+        </span>
       </div>
-    </motion.a>
+
+      <div style={{ width: '100%', height: 1, background: T.hair }} />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <div style={{ display: 'flex', gap: 14, color: T.ink }}>
+          <span onClick={e => { e.stopPropagation(); window.location.href = `mailto:${personalInfo.email}`; }}>
+            <Mail size={14} />
+          </span>
+          <span onClick={e => { e.stopPropagation(); window.open(personalInfo.linkedin, '_blank'); }}>
+            <Linkedin size={14} />
+          </span>
+          <span onClick={e => { e.stopPropagation(); window.open(personalInfo.github, '_blank'); }}>
+            <Github size={14} />
+          </span>
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F.mono, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.ink }}>
+          Open <ArrowRight size={12} />
+        </div>
+      </div>
+    </button>
   );
 }
 
+// ── Expanded panel ────────────────────────────────────────────────────────────
+
+function SectionContent({ route, isMobile }: { route: Route; isMobile: boolean }) {
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={route}
+        initial={{ opacity: 0, x: 16 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -16 }}
+        transition={{ duration: 0.22 }}
+      >
+        {route === 'About'      && <PaperAbout isMobile={isMobile} />}
+        {route === 'Projects'   && <PaperProjects />}
+        {route === 'Homelab'    && <PaperHomelab isMobile={isMobile} />}
+        {route === 'AI Toolkit' && <PaperAIToolkit isMobile={isMobile} />}
+        {route === 'Writing'    && <PaperWriting />}
+        {route === 'Contact'    && <PaperContact isMobile={isMobile} />}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function PaperExpanded({
+  route, setRoute, onClose, isMobile,
+}: {
+  route: Route;
+  setRoute: (r: Route) => void;
+  onClose: () => void;
+  isMobile: boolean;
+}) {
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '90vh', fontFamily: F.body, color: T.ink }}>
+        {/* Compact header */}
+        <div style={{
+          padding: '12px 16px',
+          borderBottom: `1px solid ${T.hair}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          flexShrink: 0,
+        }}>
+          <AvatarMono size={36} initials={personalInfo.initials} src={personalInfo.profileImage} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: F.display, fontSize: 15, fontWeight: 500 }}>{personalInfo.name}</div>
+            <div style={{ fontSize: 10.5, color: T.sub }}>Software Engineer</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.sub, display: 'flex', padding: 0 }}>
+            <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
+          </button>
+        </div>
+
+        {/* Pill tabs */}
+        <div style={{
+          padding: '10px 16px',
+          borderBottom: `1px solid ${T.hair}`,
+          display: 'flex',
+          gap: 6,
+          overflowX: 'auto',
+          flexShrink: 0,
+        }}
+          className="paper-scroll"
+        >
+          {ROUTES.map(r => (
+            <button
+              key={r}
+              onClick={() => setRoute(r)}
+              style={{
+                background: route === r ? T.ink : 'transparent',
+                color:      route === r ? T.card : T.sub,
+                border: route === r ? 'none' : `1px solid ${T.hair}`,
+                cursor: 'pointer',
+                padding: '6px 12px',
+                fontFamily: F.mono,
+                fontSize: 10.5,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+                borderRadius: 0,
+              }}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+
+        {/* Scrollable content */}
+        <div className="paper-scroll" style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 40px' }}>
+          <SectionContent route={route} isMobile />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: two-column grid
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '240px 1fr',
+      height: '90vh',
+      fontFamily: F.body,
+      color: T.ink,
+    }}>
+      {/* Left rail */}
+      <aside className="paper-scroll" style={{
+        padding: '28px 22px',
+        borderRight: `1px solid ${T.hair}`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 22,
+        overflowY: 'auto',
+      }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <AvatarMono size={44} initials={personalInfo.initials} src={personalInfo.profileImage} />
+          <div>
+            <div style={{ fontFamily: F.display, fontSize: 17, lineHeight: 1, fontWeight: 500 }}>{personalInfo.name}</div>
+            <div style={{ fontSize: 11, color: T.sub, marginTop: 4 }}>Software Engineer</div>
+          </div>
+        </div>
+
+        <nav style={{ display: 'flex', flexDirection: 'column' }}>
+          <PaperLabel style={{ marginBottom: 8 }}>Sections</PaperLabel>
+          {ROUTES.map((r, i) => {
+            const active = route === r;
+            return (
+              <button
+                key={r}
+                onClick={() => setRoute(r)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderTop: `1px solid ${T.hair}`,
+                  borderBottom: i === ROUTES.length - 1 ? `1px solid ${T.hair}` : 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '9px 8px',
+                  color: active ? T.ink : T.sub,
+                  fontSize: 14,
+                  textAlign: 'left',
+                  fontFamily: F.body,
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: F.mono, fontSize: 10, width: 18, color: active ? T.ink : T.sub }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {r}
+                </span>
+                {active && <ChevronRight size={12} />}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <PaperLabel>Elsewhere</PaperLabel>
+          {[
+            { href: personalInfo.github,   Icon: Github,   label: 'github.com/yashwalankar' },
+            { href: personalInfo.linkedin, Icon: Linkedin, label: 'linkedin.com/in/yashwalankar' },
+            { href: `mailto:${personalInfo.email}`, Icon: Mail, label: personalInfo.email },
+          ].map(l => (
+            <a key={l.label} href={l.href} target={l.href.startsWith('mailto') ? undefined : '_blank'} rel="noopener noreferrer"
+              style={{ color: T.ink, fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+              <l.Icon size={13} /> {l.label}
+            </a>
+          ))}
+        </div>
+
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: F.mono,
+            fontSize: 10,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: T.sub,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: 0,
+          }}
+        >
+          <ChevronRight size={12} style={{ transform: 'rotate(180deg)' }} />
+          Collapse card
+        </button>
+      </aside>
+
+      {/* Right content */}
+      <section className="paper-scroll" style={{ padding: '36px 40px 32px', overflowY: 'auto' }}>
+        <SectionContent route={route} isMobile={false} />
+      </section>
+    </div>
+  );
+}
+
+// ── Portfolio card (manages state) ────────────────────────────────────────────
+
 function PortfolioCard() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [route, setRoute] = useState<Route>('About');
   const isMobile = useIsMobile();
-  const rotatingTitle = useRotatingTitle(TITLES);
+
+  useEffect(() => {
+    incrementViewCount();
+  }, []);
 
   return (
     <motion.div
-      layout
-      initial={false}
-      animate={{
-        maxWidth: isExpanded ? (isMobile ? '100%' : 896) : (isMobile ? '100%' : 448),
-        height: isExpanded ? '90vh' : 'auto',
-      }}
-      transition={{
-        layout: { duration: 0.5, type: 'spring', bounce: 0.2 },
-      }}
+      animate={{ maxWidth: isExpanded ? (isMobile ? '100%' : 880) : (isMobile ? '100%' : 408) }}
+      transition={{ type: 'spring', bounce: 0.1, duration: 0.55 }}
       style={{
-        background: 'white',
-        borderRadius: 16,
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         width: '100%',
-        overflowY: isExpanded ? 'auto' : 'visible',
+        background: (isMobile && !isExpanded) ? 'transparent' : T.card,
+        border: (isMobile && !isExpanded) ? 'none' : `1px solid ${T.hair}`,
+        borderRadius: (isMobile && !isExpanded) ? 0 : 4,
+        boxShadow: (isMobile && !isExpanded) ? 'none' : '0 1px 0 rgba(0,0,0,0.02), 0 30px 60px -40px rgba(0,0,0,0.3)',
+        overflow: (isMobile && !isExpanded) ? 'visible' : 'hidden',
       }}
     >
-      {/* Header / Business Card */}
-      <div
-        style={{
-          padding: isMobile ? 24 : 32,
-          position: 'relative',
-          borderBottom: isExpanded ? '1px solid #e5e7eb' : 'none',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: isExpanded ? 'row' : 'column',
-            alignItems: 'center',
-            textAlign: isExpanded ? 'left' : 'center',
-            gap: isExpanded ? 16 : 0,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              paddingTop: 14,
-            }}
-          >
-            <Avatar
-              name={personalInfo.name}
-              initials={personalInfo.initials}
-              src={personalInfo.profileImage}
-              size={isExpanded ? 64 : 96}
-            />
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <h1
-              style={{
-                fontSize: isExpanded ? (isMobile ? 20 : 24) : (isMobile ? 24 : 30),
-                fontWeight: 'bold',
-                color: '#111827',
-                marginBottom: 4,
-                lineHeight: 1.1,
-                margin: 0
-              }}
-            >
-              {personalInfo.name}
-            </h1>
-            <p
-              style={{
-                fontSize: isExpanded ? (isMobile ? 14 : 16) : (isMobile ? 16 : 18),
-                color: '#4b5563',
-                marginBottom: isExpanded ? 0 : 16,
-              }}
-            >
-              {rotatingTitle}
-            </p>
-          </div>
-
-          {isExpanded ? (
-            <SocialLinks
-              email={personalInfo.email}
-              linkedin={personalInfo.linkedin}
-              github={personalInfo.github}
-            />
-          ) : (
-            <>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: '#6b7280',
-                  marginBottom: 24,
-                }}
-              >
-                <MapPin style={{ width: 16, height: 16, marginRight: 4 }} />
-                <span style={{ fontSize: 14 }}>{personalInfo.location}</span>
-              </div>
-              <SocialLinks
-                email={personalInfo.email}
-                linkedin={personalInfo.linkedin}
-                github={personalInfo.github}
-              />
-            </>
-          )}
-        </div>
-
-        {!isExpanded && (
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsExpanded(true)}
-            style={{
-              position: 'absolute',
-              bottom: isMobile ? 16 : 32,
-              right: isMobile ? 16 : 32,
-              background: '#9333ea',
-              color: 'white',
-              padding: 12,
-              borderRadius: '50%',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <motion.div
-              animate={{ rotate: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <ChevronRight style={{ width: 24, height: 24 }} />
-            </motion.div>
-          </motion.button>
-        )}
-      </div>
-
-      {/* Expanded Content */}
-      <AnimatePresence>
-        {isExpanded && (
+      <AnimatePresence mode="wait">
+        {!isExpanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            style={{ padding: isMobile ? 16 : 32 }}
+            key="intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
           >
-            {/* Tab Navigation */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.3 }}
-              style={{
-                display: 'flex',
-                gap: 8,
-                overflowX: isMobile ? 'auto' : 'visible',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-              }}
-            >
-              {CATEGORIES.map((category, idx) => (
-                <motion.button
-                  key={category}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + idx * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setActiveTab(idx)}
-                  style={{
-                    padding: isMobile ? '8px 12px' : '10px 20px',
-                    fontSize: isMobile ? 12 : 14,
-                    fontWeight: 500,
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    border: 'none',
-                    outline: 'none',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    background: activeTab === idx ? '#9333ea' : 'transparent',
-                    color: activeTab === idx ? 'white' : '#6b7280',
-                    transition: 'all 0.3s',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (activeTab !== idx) {
-                      e.currentTarget.style.background = '#e5e7eb';
-                      e.currentTarget.style.color = '#374151';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeTab !== idx) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#6b7280';
-                    }
-                  }}
-                >
-                  {category}
-                </motion.button>
-              ))}
-            </motion.div>
-
-            {/* Tab Panels */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                style={{ marginTop: 24 }}
-              >
-                {/* About Me Panel */}
-                {activeTab === 0 && (
-                  <div>
-                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                      About Me
-                    </h2>
-                    <p style={{ color: '#374151', lineHeight: 1.6, fontSize: 16, marginBottom: 20 }}>
-                      {personalInfo.aboutMe}
-                    </p>
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      <motion.a
-                        whileHover={{ 
-                          scale: 1.05,
-                          y: -2,
-                          backgroundColor: '#7e22ce'
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                        href={personalInfo.resumeLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          background: '#9333ea',
-                          color: 'white',
-                          padding: '12px 24px',
-                          borderRadius: 8,
-                          textDecoration: 'none',
-                          fontWeight: 500,
-                          fontSize: 16,
-                        }}
-                      >
-                        <FileText style={{ width: 20, height: 20 }} />
-                        View My Resume
-                      </motion.a>
-                    </div>
-                  </div>
-                )}
-
-                {/* Projects Panel */}
-                {activeTab === 1 && (
-                  <div>
-                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                      Projects
-                    </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      {personalInfo.projects.map((project, idx) => (
-                        <ProjectCard key={idx} project={project} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Homelab Panel */}
-                {activeTab === 2 && (
-                  <div>
-                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 12 }}>
-                      Homelab
-                    </h2>
-                    <div
-                      style={{
-                        background: '#f0f9ff',
-                        border: '1px solid #bae6fd',
-                        borderRadius: 12,
-                        padding: 16,
-                        marginBottom: 20,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <Server style={{ width: 20, height: 20, color: '#0369a1' }} />
-                        <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0c4a6e', margin: 0 }}>
-                          Self-Hosting Enthusiast
-                        </h3>
-                      </div>
-                      <p style={{ color: '#0c4a6e', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                        {notes.homelabIntro}
-                      </p>
-                    </div>
-                    <h3 style={{ fontSize: 18, fontWeight: 600, color: '#111827', marginBottom: 12 }}>
-                      Services I Self-Host
-                    </h3>
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-                        gap: 12,
-                      }}
-                    >
-                      {personalInfo.homelabServices.map((service, idx) => (
-                        <HomelabServiceCard key={idx} service={service} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Contact Me Panel */}
-                {activeTab === 3 && (
-                  <div>
-                    <h2 style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                      Contact Me
-                    </h2>
-                    <p style={{ color: '#4b5563', fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
-                      Feel free to reach out to me through any of the following platforms. I'm always open to discussing new projects, creative ideas, or opportunities.
-                    </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {personalInfo.socialLinks.map((link, idx) => {
-                        const IconComponent = link.icon;
-                        return (
-                          <motion.a
-                            key={idx}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            whileHover={{ 
-                              x: 8,
-                              borderColor: link.color
-                            }}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 16,
-                              padding: 16,
-                              background: '#f9fafb',
-                              borderRadius: 12,
-                              border: '1px solid #e5e7eb',
-                              textDecoration: 'none',
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: 12,
-                                background: `${link.color}15`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <IconComponent style={{ width: 24, height: 24, color: link.color }} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <h3 style={{ fontSize: 16, fontWeight: 600, color: '#111827', margin: 0 }}>
-                                {link.name}
-                              </h3>
-                              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-                                {link.url.replace('mailto:', '').replace('https://', '')}
-                              </p>
-                            </div>
-                            <ExternalLink style={{ width: 20, height: 20, color: '#9ca3af' }} />
-                          </motion.a>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                paddingTop: isMobile ? 16 : 24,
-                marginTop: 24,
-              }}
-            >
-              <motion.button
-                whileHover={{ x: -5 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsExpanded(false)}
-                style={{
-                  color: '#9333ea',
-                  fontWeight: 200,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: isMobile ? 14 : 16,
-                }}
-              > 
-                <ChevronRight style={{ width: 20, height: 20, transform: 'rotate(180deg)' }} />
-                Back
-              </motion.button>
-            </div>
+            <PaperIntroCard onOpen={() => setIsExpanded(true)} isMobile={isMobile} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="expanded"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <PaperExpanded
+              route={route}
+              setRoute={setRoute}
+              onClose={() => { setIsExpanded(false); setRoute('About'); }}
+              isMobile={isMobile}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -647,21 +1056,17 @@ function PortfolioCard() {
   );
 }
 
-function App() {
+export default function App() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(to bottom right, #0f172a, #581c87, #0f172a)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-      }}
-    >
+    <div style={{
+      minHeight: '100vh',
+      background: T.bg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+    }}>
       <PortfolioCard />
     </div>
   );
 }
-
-export default App;
