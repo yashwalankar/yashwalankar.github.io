@@ -4,7 +4,7 @@ import {
   FileText, ChevronRight, ArrowRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { personalInfo, notes, writingPosts, aiToolkit } from './deets';
+import { personalInfo, writingPosts, aiToolkit } from './deets';
 import { submitContact, trackResumeDownload, incrementViewCount, ContactPayload } from './api';
 import './App.css';
 
@@ -18,6 +18,7 @@ const T = {
   hairStrong:  '#c9c0b2',
   chipBg:      '#f0ebe1',
   green:       '#3d8a5b',
+  bgWarm:      '#fbf8f2',
 } as const;
 
 const F = {
@@ -28,6 +29,7 @@ const F = {
 
 type Route = 'About' | 'Projects' | 'Homelab' | 'AI Toolkit' | 'Writing' | 'Contact';
 const ROUTES: Route[] = ['About', 'Projects', 'Homelab', 'AI Toolkit', 'Writing', 'Contact'];
+const SUBTITLE = 'Software Engineer';
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -103,6 +105,54 @@ function AvatarMono({ size, initials, src }: { size: number; initials: string; s
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         : initials}
     </div>
+  );
+}
+
+function IntroCardBody({
+  onOpen, avatarSize, nameSize, subtitleSize, locSize,
+}: {
+  onOpen: () => void;
+  avatarSize: number; nameSize: number; subtitleSize: number; locSize: number;
+}) {
+  return (
+    <>
+      <AvatarMono size={avatarSize} initials={personalInfo.initials} src={personalInfo.profileImage} />
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: F.display, fontSize: nameSize, lineHeight: 1.1, letterSpacing: '-0.01em', fontWeight: 500 }}>
+          {personalInfo.name}
+        </div>
+        <div style={{ marginTop: 4, color: T.sub, fontSize: subtitleSize }}>
+          {SUBTITLE}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 12, color: T.sub, fontSize: locSize, alignItems: 'center' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <MapPin size={Math.round(locSize)} /> {personalInfo.location}
+        </span>
+        <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.sub, display: 'inline-block' }} />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
+          Open to roles
+        </span>
+      </div>
+      <div style={{ width: '100%', height: 1, background: T.hair }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <div style={{ display: 'flex', gap: 14, color: T.ink }}>
+          <span onClick={e => { e.stopPropagation(); window.location.href = `mailto:${personalInfo.email}`; }}>
+            <Mail size={14} />
+          </span>
+          <span onClick={e => { e.stopPropagation(); window.open(personalInfo.linkedin, '_blank'); }}>
+            <Linkedin size={14} />
+          </span>
+          <span onClick={e => { e.stopPropagation(); window.open(personalInfo.github, '_blank'); }}>
+            <Github size={14} />
+          </span>
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F.mono, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.ink }}>
+          Open <ArrowRight size={12} />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -323,19 +373,19 @@ function PaperProjects() {
   );
 }
 
+const homelabCategories = personalInfo.homelabServices.reduce<Record<string, typeof personalInfo.homelabServices>>((acc, s) => {
+  (acc[s.cat] = acc[s.cat] ?? []).push(s);
+  return acc;
+}, {});
+const homelabCats = Object.keys(homelabCategories);
+
 function PaperHomelab({ isMobile }: { isMobile: boolean }) {
-  // Group services by category, preserving insertion order
-  const categories = personalInfo.homelabServices.reduce<Record<string, typeof personalInfo.homelabServices>>((acc, s) => {
-    (acc[s.cat] = acc[s.cat] ?? []).push(s);
-    return acc;
-  }, {});
-  const cats = Object.keys(categories);
 
   return (
     <>
       <SectionHead num="03 / 06" kicker="Homelab" title="Eleven services, three boxes." />
       <p style={{ fontSize: 14, lineHeight: 1.6, color: T.sub, maxWidth: 540 }}>
-        {notes.homelabIntro}
+        {personalInfo.homelabIntro}
       </p>
 
       {/* Host strip */}
@@ -350,7 +400,7 @@ function PaperHomelab({ isMobile }: { isMobile: boolean }) {
             border: `1px solid ${T.hair}`,
             borderRadius: 3,
             padding: '12px 14px',
-            background: '#fbf8f2',
+            background: T.bgWarm,
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
@@ -368,7 +418,7 @@ function PaperHomelab({ isMobile }: { isMobile: boolean }) {
           Services · {personalInfo.homelabServices.length}
         </PaperLabel>
         <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
-          {cats.map((cat, ci) => (
+          {homelabCats.map((cat, ci) => (
             <div key={cat} style={{
               borderTop: ci === 0 ? 'none' : `1px solid ${T.hairStrong}`,
               display: 'grid',
@@ -377,7 +427,7 @@ function PaperHomelab({ isMobile }: { isMobile: boolean }) {
               {/* Category label */}
               <div style={{
                 padding: '14px 14px',
-                background: '#fbf8f2',
+                background: T.bgWarm,
                 borderRight: isMobile ? 'none' : `1px solid ${T.hair}`,
                 borderBottom: isMobile ? `1px solid ${T.hair}` : 'none',
               }}>
@@ -386,14 +436,14 @@ function PaperHomelab({ isMobile }: { isMobile: boolean }) {
 
               {/* Service rows */}
               <div>
-                {categories[cat].map((s, i) => (
+                {homelabCategories[cat].map((s, i) => (
                   <div key={s.name} style={{
                     display: 'grid',
                     gridTemplateColumns: isMobile ? '1fr' : '140px 1fr',
                     gap: 10,
                     padding: '10px 14px',
                     alignItems: 'start',
-                    borderBottom: i === categories[cat].length - 1 ? 'none' : `1px dashed ${T.hair}`,
+                    borderBottom: i === homelabCategories[cat].length - 1 ? 'none' : `1px dashed ${T.hair}`,
                   }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: T.ink }}>{s.name}</div>
@@ -434,7 +484,7 @@ function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
               padding: '13px 16px',
               alignItems: 'center',
               borderTop: i === 0 ? 'none' : `1px solid ${T.hair}`,
-              background: i % 2 ? '#fbf8f2' : 'transparent',
+              background: i % 2 ? T.bgWarm : 'transparent',
             }}>
               <div>
                 <div style={{ fontFamily: F.display, fontSize: 15, fontWeight: 500, color: T.ink }}>{m.name}</div>
@@ -669,7 +719,6 @@ function PaperIntroCard({ onOpen, isMobile }: { onOpen: () => void; isMobile: bo
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100%',
         boxSizing: 'border-box',
       }}>
         <button
@@ -692,46 +741,7 @@ function PaperIntroCard({ onOpen, isMobile }: { onOpen: () => void; isMobile: bo
             boxSizing: 'border-box',
           }}
         >
-          <AvatarMono size={68} initials={personalInfo.initials} src={personalInfo.profileImage} />
-
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: F.display, fontSize: 26, lineHeight: 1.1, letterSpacing: '-0.01em', fontWeight: 500 }}>
-              {personalInfo.name}
-            </div>
-            <div style={{ marginTop: 4, color: T.sub, fontSize: 12.5 }}>
-              Software Engineer
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 12, color: T.sub, fontSize: 11.5, alignItems: 'center' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <MapPin size={11} /> {personalInfo.location}
-            </span>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.sub, display: 'inline-block' }} />
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
-              Open to roles
-            </span>
-          </div>
-
-          <div style={{ width: '100%', height: 1, background: T.hair }} />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div style={{ display: 'flex', gap: 14, color: T.ink }}>
-              <span onClick={e => { e.stopPropagation(); window.location.href = `mailto:${personalInfo.email}`; }}>
-                <Mail size={14} />
-              </span>
-              <span onClick={e => { e.stopPropagation(); window.open(personalInfo.linkedin, '_blank'); }}>
-                <Linkedin size={14} />
-              </span>
-              <span onClick={e => { e.stopPropagation(); window.open(personalInfo.github, '_blank'); }}>
-                <Github size={14} />
-              </span>
-            </div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F.mono, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.ink }}>
-              Open <ArrowRight size={12} />
-            </div>
-          </div>
+          <IntroCardBody onOpen={onOpen} avatarSize={68} nameSize={26} subtitleSize={12.5} locSize={11.5} />
         </button>
       </div>
     );
@@ -755,46 +765,7 @@ function PaperIntroCard({ onOpen, isMobile }: { onOpen: () => void; isMobile: bo
         boxSizing: 'border-box',
       }}
     >
-      <AvatarMono size={82} initials={personalInfo.initials} src={personalInfo.profileImage} />
-
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontFamily: F.display, fontSize: 26, lineHeight: 1.1, letterSpacing: '-0.01em', fontWeight: 500 }}>
-          {personalInfo.name}
-        </div>
-        <div style={{ marginTop: 4, color: T.sub, fontSize: 13 }}>
-          Software Engineer
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 14, color: T.sub, fontSize: 12, alignItems: 'center' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <MapPin size={12} /> {personalInfo.location}
-        </span>
-        <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.sub, display: 'inline-block' }} />
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
-          Open to roles
-        </span>
-      </div>
-
-      <div style={{ width: '100%', height: 1, background: T.hair }} />
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-        <div style={{ display: 'flex', gap: 14, color: T.ink }}>
-          <span onClick={e => { e.stopPropagation(); window.location.href = `mailto:${personalInfo.email}`; }}>
-            <Mail size={14} />
-          </span>
-          <span onClick={e => { e.stopPropagation(); window.open(personalInfo.linkedin, '_blank'); }}>
-            <Linkedin size={14} />
-          </span>
-          <span onClick={e => { e.stopPropagation(); window.open(personalInfo.github, '_blank'); }}>
-            <Github size={14} />
-          </span>
-        </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F.mono, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.ink }}>
-          Open <ArrowRight size={12} />
-        </div>
-      </div>
+      <IntroCardBody onOpen={onOpen} avatarSize={82} nameSize={26} subtitleSize={13} locSize={12} />
     </button>
   );
 }
@@ -845,7 +816,7 @@ function PaperExpanded({
           <AvatarMono size={36} initials={personalInfo.initials} src={personalInfo.profileImage} />
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: F.display, fontSize: 15, fontWeight: 500 }}>{personalInfo.name}</div>
-            <div style={{ fontSize: 10.5, color: T.sub }}>Software Engineer</div>
+            <div style={{ fontSize: 10.5, color: T.sub }}>{SUBTITLE}</div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.sub, display: 'flex', padding: 0 }}>
             <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
@@ -916,7 +887,7 @@ function PaperExpanded({
           <AvatarMono size={44} initials={personalInfo.initials} src={personalInfo.profileImage} />
           <div>
             <div style={{ fontFamily: F.display, fontSize: 17, lineHeight: 1, fontWeight: 500 }}>{personalInfo.name}</div>
-            <div style={{ fontSize: 11, color: T.sub, marginTop: 4 }}>Software Engineer</div>
+            <div style={{ fontSize: 11, color: T.sub, marginTop: 4 }}>{SUBTITLE}</div>
           </div>
         </div>
 
@@ -1011,17 +982,19 @@ function PortfolioCard() {
     incrementViewCount();
   }, []);
 
+  const isBareShell = isMobile && !isExpanded;
+
   return (
     <motion.div
       animate={{ maxWidth: isExpanded ? (isMobile ? '100%' : 880) : (isMobile ? '100%' : 408) }}
       transition={{ type: 'spring', bounce: 0.1, duration: 0.55 }}
       style={{
         width: '100%',
-        background: (isMobile && !isExpanded) ? 'transparent' : T.card,
-        border: (isMobile && !isExpanded) ? 'none' : `1px solid ${T.hair}`,
-        borderRadius: (isMobile && !isExpanded) ? 0 : 4,
-        boxShadow: (isMobile && !isExpanded) ? 'none' : '0 1px 0 rgba(0,0,0,0.02), 0 30px 60px -40px rgba(0,0,0,0.3)',
-        overflow: (isMobile && !isExpanded) ? 'visible' : 'hidden',
+        background: isBareShell ? 'transparent' : T.card,
+        border: isBareShell ? 'none' : `1px solid ${T.hair}`,
+        borderRadius: isBareShell ? 0 : 4,
+        boxShadow: isBareShell ? 'none' : '0 1px 0 rgba(0,0,0,0.02), 0 30px 60px -40px rgba(0,0,0,0.3)',
+        overflow: isBareShell ? 'visible' : 'hidden',
       }}
     >
       <AnimatePresence mode="wait">

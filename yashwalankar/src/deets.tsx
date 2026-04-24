@@ -22,7 +22,7 @@ import wireguardIcon from './media/icons/wireguard.png'
 export const notes = {
   homelabIntro: "I self-host everything I reasonably can. My homelab is both a learning sandbox and a production setup for my household — built around data ownership, privacy, and control over my software stack.",
 }
-
+// TODO : Add Links
 export const writingPosts = [
   { title: 'Exactly-once is a lie — and what to do instead',     date: 'Mar 2026', readTime: '8 min' },
   { title: "My homelab runs on 116W. Here's the breakdown",       date: 'Jan 2026', readTime: '5 min' },
@@ -49,7 +49,7 @@ export const personalInfo = {
     { company: '[Company]',   role: 'Software Engineer',    period: '2019 — 2021'   },
   ],
 
-  toolkit: ['Go', 'TypeScript', 'Python', 'Postgres', 'Docker', 'Kubernetes', 'React', 'Node.js', 'gRPC', 'Kafka'],
+  toolkit: ['TypeScript', 'Python', 'Go', 'Postgres', 'Docker', 'AWS', 'React', 'Node.js', 'gRPC', 'Vercel'],
 
   // Physical rack inventory
   hardware: [

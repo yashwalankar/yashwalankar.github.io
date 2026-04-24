@@ -1,0 +1,23 @@
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- Environment variables ---
+.env
+.env.*
+*.env
+
+# --- Claude / AI-related scratch files ---
+.claude/
+claude-output/
+claude_logs/
+*.claude.json
+*.prompt.txt
+*.ai.txt
+
+# --- Node ---
+node_modules/
+dist/
+build/
+.next/
+out/
