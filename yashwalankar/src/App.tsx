@@ -230,7 +230,7 @@ function PaperAbout({ num, isMobile }: { num: string; isMobile: boolean }) {
   return (
     <>
       <SectionHead num={num} kicker={C.about.kicker} title={C.about.title} />
-      <p style={{ fontSize: 15, lineHeight: 1.65, maxWidth: 520, color: T.ink }}>
+      <p style={{ fontSize: 15, lineHeight: 1.65, maxWidth: 520, color: T.sub }}>
         {personalInfo.aboutMe}
       </p>
       <div style={{
@@ -263,10 +263,10 @@ function PaperAbout({ num, isMobile }: { num: string; isMobile: boolean }) {
 
         {/* Toolkit + Resume */}
         <div>
-          <PaperLabel style={{ marginBottom: 10 }}>{C.about.toolkit}</PaperLabel>
+          {/* <PaperLabel style={{ marginBottom: 10 }}>{C.about.toolkit}</PaperLabel>
           <div>
             {personalInfo.toolkit.map(t => <PaperChip key={t}>{t}</PaperChip>)}
-          </div>
+          </div> */}
           <div style={{
             marginTop: 22,
             padding: '14px 16px',
@@ -320,7 +320,7 @@ function PaperProjects({ num }: { num: string }) {
             gap: 16,
             alignItems: 'start',
             padding: '20px 0',
-            borderTop: i === 0 ? `1px solid ${T.hairStrong}` : `1px solid ${T.hair}`,
+            borderTop: i === 0 ? 'none' : `1px solid ${T.hair}`,
           }}>
             <div style={{ fontFamily: F.mono, fontSize: 11, color: T.sub, paddingTop: 3 }}>
               №{String(i + 1).padStart(2, '0')}
@@ -520,7 +520,7 @@ function PaperAIToolkit({ num, isMobile }: { num: string; isMobile: boolean }) {
               background: i % 2 ? T.bgWarm : 'transparent',
             }}>
               <div>
-                <div style={{ fontFamily: F.display, fontSize: 15, fontWeight: 500, color: T.ink }}>{m.name}</div>
+                <div style={{ fontFamily: F.mono, fontSize: 12, fontWeight: 500, color: T.ink }}>{m.name}</div>
                 <div style={{ fontFamily: F.mono, fontSize: 10, color: T.sub, marginTop: 2 }}>{m.vendor}</div>
               </div>
               <div style={{ fontSize: 12.5, color: T.ink }}>{m.use}</div>

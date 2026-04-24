@@ -152,12 +152,14 @@ export const personalInfo = {
 };
 
 export const aiToolkit = {
-  intro: 'I build with AI daily — writing code, wiring agents into real systems, and letting models poke at my homelab. My setup leans on open standards (MCP) so tools compose instead of locking me in.',
+  intro: 'AI is part of my workflow — I use it to write code faster, wire agents into real systems, and automate parts of my homelab. I prefer open standards like MCP so the pieces compose without vendor lock-in.',
   tools: [
     // Clients & agents
-    { name: 'Claude Code', role: 'CLI coding agent with skills, hooks & MCP', type: 'Agent' },
+    { name: 'claude-code', role: 'CLI coding agent with skills, hooks & MCP', type: 'Agent' },
     //{ name: 'Cursor', role: 'Day-to-day editor', type: 'IDE' },
-    { name: 'Open WebUI', role: 'Private chat UI over Ollama', type: 'Chat' },
+    { name: 'open-webUI', role: 'Private chat UI over Ollama', type: 'Chat' },
+    { name: 'graphify', role: 'Knowledge graph for AI coding assistants', type: 'Skill' },
+    { name: 'abtop', role: 'Htop but for token management for AI ', type: 'Tool' },
     //{ name: 'n8n', role: 'Agentic workflows + cron triggers', type: 'Automation' },
     // MCP servers
     // { name: '@filesystem', role: 'Read/write scoped project dirs', type: 'MCP · local' },
