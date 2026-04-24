@@ -22,7 +22,7 @@ export const sections = [
   { id: 'projects', label: 'Projects',   enabled: true },
   { id: 'homelab',  label: 'Homelab',    enabled: true },
   { id: 'ai',       label: 'AI Toolkit', enabled: true },
-  { id: 'reads',    label: 'Reads',      enabled: true },
+  { id: 'reads',    label: 'Reads',      enabled: false },
   { id: 'contact',  label: 'Contact',    enabled: true },
 ] as const;
 
@@ -48,7 +48,7 @@ export const sectionCopy = {
   },
   homelab: {
     kicker: 'Homelab',
-    title: 'Eleven services, three boxes.',
+    title: 'Eighteen services, three boxes.',
     servicesLabel: 'Services',   // rendered as "Services · N"
   },
   ai: {
