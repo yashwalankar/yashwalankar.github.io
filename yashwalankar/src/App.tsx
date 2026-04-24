@@ -6,6 +6,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { personalInfo, myWriting, bookmarks, aiToolkit } from './deets';
 import { submitContact, trackResumeDownload, incrementViewCount, ContactPayload } from './api';
+import { siteConfig, sections, sectionCopy as C, navCopy, SectionId, enabledSections } from './config';
 import './App.css';
 
 // ── Theme ────────────────────────────────────────────────────────────────────
@@ -27,9 +28,7 @@ const F = {
   mono:    `'JetBrains Mono', ui-monospace, Menlo, monospace`,
 } as const;
 
-type Route = 'About' | 'Projects' | 'Homelab' | 'AI Toolkit' | 'Reads' | 'Contact';
-const ROUTES: Route[] = ['About', 'Projects', 'Homelab', 'AI Toolkit', 'Reads', 'Contact'];
-const SUBTITLE = 'Software Engineer';
+type Route = SectionId;
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -122,18 +121,22 @@ function IntroCardBody({
           {personalInfo.name}
         </div>
         <div style={{ marginTop: 4, color: T.sub, fontSize: subtitleSize }}>
-          {SUBTITLE}
+          {siteConfig.subtitle}
         </div>
       </div>
       <div style={{ display: 'flex', gap: 12, color: T.sub, fontSize: locSize, alignItems: 'center' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <MapPin size={Math.round(locSize)} /> {personalInfo.location}
         </span>
-        <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.sub, display: 'inline-block' }} />
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
-          Open to roles
-        </span>
+        {siteConfig.availability.open && (
+          <>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.sub, display: 'inline-block' }} />
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
+              {siteConfig.availability.label}
+            </span>
+          </>
+        )}
       </div>
       <div style={{ width: '100%', height: 1, background: T.hair }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
@@ -149,31 +152,32 @@ function IntroCardBody({
           </span>
         </div>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F.mono, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.ink }}>
-          Open <ArrowRight size={12} />
+          {siteConfig.availability.ctaLabel} <ArrowRight size={12} />
         </div>
       </div>
     </>
   );
 }
 
-function SectionHead({ num, kicker, title }: { num: string; kicker: string; title: React.ReactNode }) {
+function SectionHead({ num, kicker, title }: { num: string; kicker: string; title: string }) {
   return (
     <header style={{ marginBottom: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <PaperLabel>{kicker}</PaperLabel>
         <PaperLabel>{num}</PaperLabel>
       </div>
-      <h1 style={{
-        fontFamily: F.display,
-        fontSize: 36,
-        lineHeight: 1.05,
-        margin: '10px 0 0',
-        letterSpacing: '-0.02em',
-        fontWeight: 500,
-        color: T.ink,
-      }}>
-        {title}
-      </h1>
+      <h1
+        style={{
+          fontFamily: F.display,
+          fontSize: 36,
+          lineHeight: 1.05,
+          margin: '10px 0 0',
+          letterSpacing: '-0.02em',
+          fontWeight: 500,
+          color: T.ink,
+        }}
+        dangerouslySetInnerHTML={{ __html: title }}
+      />
       <div style={{ height: 1, background: T.hairStrong, marginTop: 16 }} />
     </header>
   );
@@ -213,7 +217,7 @@ function PaperInput({
 
 // ── Section panels ────────────────────────────────────────────────────────────
 
-function PaperAbout({ isMobile }: { isMobile: boolean }) {
+function PaperAbout({ num, isMobile }: { num: string; isMobile: boolean }) {
   const [loading, setLoading] = useState(false);
 
   async function handleResume() {
@@ -225,7 +229,7 @@ function PaperAbout({ isMobile }: { isMobile: boolean }) {
 
   return (
     <>
-      <SectionHead num="01 / 06" kicker="About" title={<>Building quiet systems<br />that don't page you at 3am.</>} />
+      <SectionHead num={num} kicker={C.about.kicker} title={C.about.title} />
       <p style={{ fontSize: 15, lineHeight: 1.65, maxWidth: 520, color: T.ink }}>
         {personalInfo.aboutMe}
       </p>
@@ -237,7 +241,7 @@ function PaperAbout({ isMobile }: { isMobile: boolean }) {
       }}>
         {/* Experience */}
         <div>
-          <PaperLabel style={{ marginBottom: 10 }}>Experience</PaperLabel>
+          <PaperLabel style={{ marginBottom: 10 }}>{C.about.experience}</PaperLabel>
           {personalInfo.experience.map((e, i) => (
             <div key={i} style={{
               display: 'flex',
@@ -259,7 +263,7 @@ function PaperAbout({ isMobile }: { isMobile: boolean }) {
 
         {/* Toolkit + Resume */}
         <div>
-          <PaperLabel style={{ marginBottom: 10 }}>Toolkit</PaperLabel>
+          <PaperLabel style={{ marginBottom: 10 }}>{C.about.toolkit}</PaperLabel>
           <div>
             {personalInfo.toolkit.map(t => <PaperChip key={t}>{t}</PaperChip>)}
           </div>
@@ -275,9 +279,9 @@ function PaperAbout({ isMobile }: { isMobile: boolean }) {
           }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 500, color: T.ink, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <FileText size={13} /> Résumé — 2026.pdf
+                <FileText size={13} /> {siteConfig.resume.displayName}
               </div>
-              <div style={{ fontSize: 11, color: T.sub, marginTop: 2 }}>Updated Mar 2026</div>
+              <div style={{ fontSize: 11, color: T.sub, marginTop: 2 }}>{siteConfig.resume.updatedLabel}</div>
             </div>
             <button
               onClick={handleResume}
@@ -304,10 +308,10 @@ function PaperAbout({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-function PaperProjects() {
+function PaperProjects({ num }: { num: string }) {
   return (
     <>
-      <SectionHead num="02 / 06" kicker="Projects" title="Selected work." />
+      <SectionHead num={num} kicker={C.projects.kicker} title={C.projects.title} />
       <div>
         {personalInfo.projects.map((p, i) => (
           <article key={p.name} style={{
@@ -379,11 +383,11 @@ const homelabCategories = personalInfo.homelabServices.reduce<Record<string, typ
 }, {});
 const homelabCats = Object.keys(homelabCategories);
 
-function PaperHomelab({ isMobile }: { isMobile: boolean }) {
+function PaperHomelab({ num, isMobile }: { num: string; isMobile: boolean }) {
 
   return (
     <>
-      <SectionHead num="03 / 06" kicker="Homelab" title="Eleven services, three boxes." />
+      <SectionHead num={num} kicker={C.homelab.kicker} title={C.homelab.title} />
       <p style={{ fontSize: 14, lineHeight: 1.6, color: T.sub, maxWidth: 540 }}>
         {personalInfo.homelabIntro}
       </p>
@@ -415,7 +419,7 @@ function PaperHomelab({ isMobile }: { isMobile: boolean }) {
       {/* Services table */}
       <div style={{ marginTop: 26 }}>
         <PaperLabel style={{ marginBottom: 10 }}>
-          Services · {personalInfo.homelabServices.length}
+          {C.homelab.servicesLabel} · {personalInfo.homelabServices.length}
         </PaperLabel>
         <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
           {homelabCats.map((cat, ci) => (
@@ -461,10 +465,10 @@ function PaperHomelab({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
+function PaperAIToolkit({ num, isMobile }: { num: string; isMobile: boolean }) {
   return (
     <>
-      <SectionHead num="04 / 06" kicker="AI Toolkit" title="How I build with models." />
+      <SectionHead num={num} kicker={C.ai.kicker} title={C.ai.title} />
       <p style={{ fontSize: 14, lineHeight: 1.65, color: T.sub, maxWidth: 540 }}>
         {aiToolkit.intro}
       </p>
@@ -472,8 +476,8 @@ function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
       {/* Unified tools table */}
       <div style={{ marginTop: 26 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-          <PaperLabel>Tools & integrations</PaperLabel>
-          <PaperLabel>Name · Role · Type</PaperLabel>
+          <PaperLabel>{C.ai.toolsLabel}</PaperLabel>
+          <PaperLabel>{C.ai.toolsHeader}</PaperLabel>
         </div>
         <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
           {aiToolkit.tools.map((t, i) => (
@@ -501,8 +505,8 @@ function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
       {/* Models table */}
       <div style={{ marginTop: 26 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-          <PaperLabel>Models in rotation</PaperLabel>
-          <PaperLabel>Cloud + local</PaperLabel>
+          <PaperLabel>{C.ai.modelsLabel}</PaperLabel>
+          <PaperLabel>{C.ai.modelsHeader}</PaperLabel>
         </div>
         <div style={{ border: `1px solid ${T.hairStrong}`, borderRadius: 3 }}>
           {aiToolkit.models.map((m, i) => (
@@ -529,16 +533,16 @@ function PaperAIToolkit({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-function PaperWriting() {
+function PaperWriting({ num }: { num: string }) {
   return (
     <>
-      <SectionHead num="05 / 06" kicker="Reads" title="Notes & essays." />
+      <SectionHead num={num} kicker={C.reads.kicker} title={C.reads.title} />
 
       {/* My Writing */}
-      <PaperLabel style={{ marginBottom: 0 }}>My Writing · {myWriting.length}</PaperLabel>
+      <PaperLabel style={{ marginBottom: 0 }}>{C.reads.writingLabel} · {myWriting.length}</PaperLabel>
       {myWriting.length === 0 ? (
         <div style={{ borderTop: `1px solid ${T.hair}`, padding: '20px 0', fontFamily: F.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.sub }}>
-          Nothing here yet.
+          {C.reads.writingEmpty}
         </div>
       ) : myWriting.map((w, i) => {
         const El = w.link ? 'a' : 'div';
@@ -585,10 +589,10 @@ function PaperWriting() {
       })}
 
       {/* Bookmarks */}
-      <PaperLabel style={{ marginTop: 28, marginBottom: 0 }}>Bookmarks · {bookmarks.length}</PaperLabel>
+      <PaperLabel style={{ marginTop: 28, marginBottom: 0 }}>{C.reads.bookmarksLabel} · {bookmarks.length}</PaperLabel>
       {bookmarks.length === 0 ? (
         <div style={{ borderTop: `1px solid ${T.hair}`, padding: '20px 0', fontFamily: F.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.sub }}>
-          No bookmarks yet.
+          {C.reads.bookmarksEmpty}
         </div>
       ) : bookmarks.map((b, i) => {
         const El = b.link ? 'a' : 'div';
@@ -641,7 +645,7 @@ function PaperWriting() {
   );
 }
 
-function PaperContact({ isMobile }: { isMobile: boolean }) {
+function PaperContact({ num, isMobile }: { num: string; isMobile: boolean }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -664,7 +668,7 @@ function PaperContact({ isMobile }: { isMobile: boolean }) {
 
   return (
     <>
-      <SectionHead num="06 / 06" kicker="Contact" title="Say hello." />
+      <SectionHead num={num} kicker={C.contact.kicker} title={C.contact.title} />
       <div style={{
         display: 'grid',
         gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
@@ -672,10 +676,10 @@ function PaperContact({ isMobile }: { isMobile: boolean }) {
       }}>
         {/* Contact form */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <PaperInput label="Name"    name="name"    placeholder="Jane Developer" />
-          <PaperInput label="Email"   name="email"   placeholder="jane@company.com" />
-          <PaperInput label="Subject" name="subject" placeholder="A role on your team" />
-          <PaperInput label="Message" name="message" placeholder="Tell me a little about what you're working on…" textarea />
+          <PaperInput label={C.contact.form.fields.name.label}    name="name"    placeholder={C.contact.form.fields.name.placeholder} />
+          <PaperInput label={C.contact.form.fields.email.label}   name="email"   placeholder={C.contact.form.fields.email.placeholder} />
+          <PaperInput label={C.contact.form.fields.subject.label} name="subject" placeholder={C.contact.form.fields.subject.placeholder} />
+          <PaperInput label={C.contact.form.fields.message.label} name="message" placeholder={C.contact.form.fields.message.placeholder} textarea />
           <button
             type="submit"
             disabled={status === 'sending' || status === 'sent'}
@@ -696,22 +700,22 @@ function PaperContact({ isMobile }: { isMobile: boolean }) {
               transition: 'opacity 0.2s',
             }}
           >
-            {status === 'sent' ? 'Sent — thanks' : status === 'sending' ? 'Sending…' : 'Send message'}
+            {status === 'sent' ? C.contact.form.sent : status === 'sending' ? C.contact.form.sending : C.contact.form.submit}
           </button>
           {status === 'error' && (
             <div style={{ fontSize: 12, color: '#c0392b', fontFamily: F.mono }}>
-              Something went wrong — try emailing directly.
+              {C.contact.form.error}
             </div>
           )}
         </form>
 
         {/* Direct links */}
         <div>
-          <PaperLabel style={{ marginBottom: 10 }}>Direct</PaperLabel>
+          <PaperLabel style={{ marginBottom: 10 }}>{C.contact.directLabel}</PaperLabel>
           {([
-            { Icon: Mail,     label: 'Email',    value: personalInfo.email,                 href: `mailto:${personalInfo.email}` },
-            { Icon: Linkedin, label: 'LinkedIn', value: 'linkedin.com/in/yashwalankar',    href: personalInfo.linkedin },
-            { Icon: Github,   label: 'GitHub',   value: 'github.com/yashwalankar',         href: personalInfo.github },
+            { Icon: Mail,     label: 'Email',    value: personalInfo.email,                                        href: `mailto:${personalInfo.email}` },
+            { Icon: Linkedin, label: 'LinkedIn', value: personalInfo.linkedin.replace('https://', ''),             href: personalInfo.linkedin },
+            { Icon: Github,   label: 'GitHub',   value: personalInfo.github.replace('https://', ''),              href: personalInfo.github },
           ] as const).map((r, i) => (
             <a
               key={r.label}
@@ -746,8 +750,8 @@ function PaperContact({ isMobile }: { isMobile: boolean }) {
             color: T.sub,
             lineHeight: 1.5,
           }}>
-            Currently in <strong style={{ color: T.ink }}>{personalInfo.location}</strong>.{' '}
-            Typical reply within 24h.
+            {C.contact.currentlyIn} <strong style={{ color: T.ink }}>{personalInfo.location}</strong>.{' '}
+            {C.contact.replyNote}
           </div>
         </div>
       </div>
@@ -820,6 +824,9 @@ function PaperIntroCard({ onOpen, isMobile }: { onOpen: () => void; isMobile: bo
 // ── Expanded panel ────────────────────────────────────────────────────────────
 
 function SectionContent({ route, isMobile }: { route: Route; isMobile: boolean }) {
+  const idx = enabledSections.findIndex(s => s.id === route);
+  const total = enabledSections.length;
+  const num = `${String(idx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -829,12 +836,12 @@ function SectionContent({ route, isMobile }: { route: Route; isMobile: boolean }
         exit={{ opacity: 0, x: -16 }}
         transition={{ duration: 0.22 }}
       >
-        {route === 'About'      && <PaperAbout isMobile={isMobile} />}
-        {route === 'Projects'   && <PaperProjects />}
-        {route === 'Homelab'    && <PaperHomelab isMobile={isMobile} />}
-        {route === 'AI Toolkit' && <PaperAIToolkit isMobile={isMobile} />}
-        {route === 'Reads'      && <PaperWriting />}
-        {route === 'Contact'    && <PaperContact isMobile={isMobile} />}
+        {route === 'about'    && <PaperAbout     num={num} isMobile={isMobile} />}
+        {route === 'projects' && <PaperProjects  num={num} />}
+        {route === 'homelab'  && <PaperHomelab   num={num} isMobile={isMobile} />}
+        {route === 'ai'       && <PaperAIToolkit num={num} isMobile={isMobile} />}
+        {route === 'reads'    && <PaperWriting   num={num} />}
+        {route === 'contact'  && <PaperContact   num={num} isMobile={isMobile} />}
       </motion.div>
     </AnimatePresence>
   );
@@ -863,7 +870,7 @@ function PaperExpanded({
           <AvatarMono size={36} initials={personalInfo.initials} src={personalInfo.profileImage} />
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: F.display, fontSize: 15, fontWeight: 500 }}>{personalInfo.name}</div>
-            <div style={{ fontSize: 10.5, color: T.sub }}>{SUBTITLE}</div>
+            <div style={{ fontSize: 10.5, color: T.sub }}>{siteConfig.subtitle}</div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.sub, display: 'flex', padding: 0 }}>
             <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
@@ -881,14 +888,14 @@ function PaperExpanded({
         }}
           className="paper-scroll"
         >
-          {ROUTES.map(r => (
+          {enabledSections.map(s => (
             <button
-              key={r}
-              onClick={() => setRoute(r)}
+              key={s.id}
+              onClick={() => setRoute(s.id)}
               style={{
-                background: route === r ? T.ink : 'transparent',
-                color:      route === r ? T.card : T.sub,
-                border: route === r ? 'none' : `1px solid ${T.hair}`,
+                background: route === s.id ? T.ink : 'transparent',
+                color:      route === s.id ? T.card : T.sub,
+                border: route === s.id ? 'none' : `1px solid ${T.hair}`,
                 cursor: 'pointer',
                 padding: '6px 12px',
                 fontFamily: F.mono,
@@ -899,7 +906,7 @@ function PaperExpanded({
                 borderRadius: 0,
               }}
             >
-              {r}
+              {s.label}
             </button>
           ))}
         </div>
@@ -934,23 +941,23 @@ function PaperExpanded({
           <AvatarMono size={44} initials={personalInfo.initials} src={personalInfo.profileImage} />
           <div>
             <div style={{ fontFamily: F.display, fontSize: 17, lineHeight: 1, fontWeight: 500 }}>{personalInfo.name}</div>
-            <div style={{ fontSize: 11, color: T.sub, marginTop: 4 }}>{SUBTITLE}</div>
+            <div style={{ fontSize: 11, color: T.sub, marginTop: 4 }}>{siteConfig.subtitle}</div>
           </div>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column' }}>
-          <PaperLabel style={{ marginBottom: 8 }}>Sections</PaperLabel>
-          {ROUTES.map((r, i) => {
-            const active = route === r;
+          <PaperLabel style={{ marginBottom: 8 }}>{navCopy.sectionsLabel}</PaperLabel>
+          {enabledSections.map((s, i) => {
+            const active = route === s.id;
             return (
               <button
-                key={r}
-                onClick={() => setRoute(r)}
+                key={s.id}
+                onClick={() => setRoute(s.id)}
                 style={{
                   background: 'none',
                   border: 'none',
                   borderTop: `1px solid ${T.hair}`,
-                  borderBottom: i === ROUTES.length - 1 ? `1px solid ${T.hair}` : 'none',
+                  borderBottom: i === enabledSections.length - 1 ? `1px solid ${T.hair}` : 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -966,7 +973,7 @@ function PaperExpanded({
                   <span style={{ fontFamily: F.mono, fontSize: 10, width: 18, color: active ? T.ink : T.sub }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  {r}
+                  {s.label}
                 </span>
                 {active && <ChevronRight size={12} />}
               </button>
@@ -975,10 +982,10 @@ function PaperExpanded({
         </nav>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <PaperLabel>Elsewhere</PaperLabel>
+          <PaperLabel>{navCopy.elsewhereLabel}</PaperLabel>
           {[
-            { href: personalInfo.github,   Icon: Github,   label: 'github.com/yashwalankar' },
-            { href: personalInfo.linkedin, Icon: Linkedin, label: 'linkedin.com/in/yashwalankar' },
+            { href: personalInfo.github,   Icon: Github,   label: personalInfo.github.replace('https://', '') },
+            { href: personalInfo.linkedin, Icon: Linkedin, label: personalInfo.linkedin.replace('https://', '') },
             { href: `mailto:${personalInfo.email}`, Icon: Mail, label: personalInfo.email },
           ].map(l => (
             <a key={l.label} href={l.href} target={l.href.startsWith('mailto') ? undefined : '_blank'} rel="noopener noreferrer"
@@ -1006,7 +1013,7 @@ function PaperExpanded({
           }}
         >
           <ChevronRight size={12} style={{ transform: 'rotate(180deg)' }} />
-          Collapse card
+          {navCopy.collapseLabel}
         </button>
       </aside>
 
@@ -1022,7 +1029,7 @@ function PaperExpanded({
 
 function PortfolioCard() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [route, setRoute] = useState<Route>('About');
+  const [route, setRoute] = useState<Route>(enabledSections[0].id);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -1066,7 +1073,7 @@ function PortfolioCard() {
             <PaperExpanded
               route={route}
               setRoute={setRoute}
-              onClose={() => { setIsExpanded(false); setRoute('About'); }}
+              onClose={() => { setIsExpanded(false); setRoute(enabledSections[0].id); }}
               isMobile={isMobile}
             />
           </motion.div>

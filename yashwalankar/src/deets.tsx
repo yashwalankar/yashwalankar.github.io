@@ -46,14 +46,15 @@ export const personalInfo = {
   aboutMe: "Software engineer with ~5 years of experience across big tech and startups. I work across backend and full-stack systems, building scalable cloud applications — ETL pipelines, analytics workflows, and payment processing. I enjoy exploring new technologies and turning complex problems into simple solutions.",
   homelabIntro: notes.homelabIntro,
 
-  // Update with your actual experience
   experience: [
-    { company: '[Company]',   role: 'Software Engineer',    period: '2023 — Present' },
-    { company: '[Company]',   role: 'Full-Stack Engineer',  period: '2021 — 2023'   },
-    { company: '[Company]',   role: 'Software Engineer',    period: '2019 — 2021'   },
+    { company: 'MarginEdge',   role: 'Software Engineer',    period: '2023 — 2025' },
+    { company: 'Amazon',   role: 'Software Engineer',  period: '2021 — 2023'   },
+    { company: 'Tenneco',   role: 'Software Engineer co-op',    period: '2020 - 2020'   },
+    { company: 'Regal Beloit',   role: 'Software Engineer co-op',    period: '2018 - 2018'   },
+    { company: 'University of Toledo',   role: 'IT Technician - part-time',    period: '2018 - 2021'   },
   ],
 
-  toolkit: ['TypeScript', 'Python', 'Go', 'Postgres', 'Docker', 'AWS', 'React', 'Node.js', 'gRPC', 'Vercel'],
+  toolkit: ['TypeScript', 'Python', 'Go', 'Postgres', 'Docker', 'AWS', 'React', 'Node.js', 'Vercel'],
 
   // Physical rack inventory
   hardware: [
