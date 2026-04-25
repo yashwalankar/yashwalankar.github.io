@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "vercel dev"
   },
+  "dependencies": {
+    "resend": "^3.0.0",
+    "@neondatabase/serverless": "^0.10.0"
+  },
   "devDependencies": {
     "@vercel/node": "^3.2.0",
     "typescript": "^5.4.0"
