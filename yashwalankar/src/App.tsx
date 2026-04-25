@@ -411,7 +411,6 @@ function PaperHomelab({ num, isMobile }: { num: string; isMobile: boolean }) {
           }}>
             <div style={{ fontSize: 13, fontWeight: 500, color: T.ink }}>{h.name}</div>
             <div style={{ fontSize: 11, color: T.sub }}>{h.role}</div>
-            <div style={{ fontFamily: F.mono, fontSize: 10, color: T.sub, marginTop: 4 }}>~{h.watts}W</div>
           </div>
         ))}
       </div>
