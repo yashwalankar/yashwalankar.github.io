@@ -105,11 +105,11 @@ export const personalInfo = {
       demo: "",
     },
     {
-      name: "Insulin Dosage Monitor",
+      name: "MyGlucoPal - Insulin Dosage Monitor",
       year: "2021",
       description: "Mobile app for Senior Design Project working with an Endocrinologist to calulate dosage of Insulin based on Meals, utilized FDA API to read barcode to get nutrition data for food",
       technologies: ["ReactNative", "AWS"],
-      link: "",
+      link: "https://github.com/MyGlucoPal",
       demo: "",
     },
     {
@@ -173,6 +173,7 @@ export const aiToolkit = {
   ],
   models: [
     { name: 'Claude Sonnet 4.6', vendor: 'Anthropic', use: 'Primary coding + long-context refactors', via: 'Claude Code' },
+    { name: 'Claude Opus 4.6', vendor: 'Anthropic', use: 'Complex but specific coding tasks', via: 'Claude Code' },
     { name: 'GPT-5', vendor: 'OpenAI', use: 'Second opinion, planning, image reasoning', via: 'Codex' },
     { name: 'Gemma 4 26B-A4B', vendor: 'Google', use: 'Local inference for private data', via: 'Ollama' },
     //{ name: 'Qwen 2.5 Coder', vendor: 'Alibaba', use: 'Local code-completion / autocomplete', via: 'Ollama · homelab' },
