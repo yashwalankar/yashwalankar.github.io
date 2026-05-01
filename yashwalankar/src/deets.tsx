@@ -63,7 +63,17 @@ export const personalInfo = {
     { name: 'Raspberry Pi 4B', role: 'DNS + monitoring', watts: 5 },
   ],
 
-  projects: [
+  projects: [ 
+    
+    {
+      name: "LinkSieve",
+      year: "2026",
+      description: "Chrome extension for extending job filters on linkedin to filter out postings by updating the react DOM client side, available on chrome web store",
+      technologies: ["JavaScript","React"],
+      link: "https://github.com/yoshimoshi-labs/LinkSieve",
+      demo: "https://chromewebstore.google.com/detail/LinkSieve/mfibjlekbfaljpkjlfodnlicifpaflfb?hl=en&authuser=0",
+    },
+
     {
       name: "QuickETL",
       year: "2025",
