@@ -64,7 +64,22 @@ export const personalInfo = {
   ],
 
   projects: [ 
-    
+    {
+      name: "KanbanMCP",
+      year: "2026",
+      description: "Tauri based desktop application with full service kanban board and MCP server with local authentication and authorization for agents",
+      technologies: ["Rust","React","Node","MCP","Tauri"],
+      link: "https://github.com/yoshimoshi-labs/kanban-mcp",
+      demo: "",
+    },
+    {
+      name: "JobZen",
+      year: "2026",
+      description: "Config-driven LinkedIn job scraper with local multi-stage scoring (keyword match, TF-IDF cosine similarity, semanticembeddings) with configurable BGE/MiniLM models against your resume — paired with a Claude-powered evaluation layer that analyzes strengths, gaps, and fit recommendations per job, then generates a detailed filterable HTML report.",
+      technologies: ["Python","Local-mini-LM","Claude"],
+      link: "https://github.com/yashwalankar/jobzen",
+      demo: "",
+    },
     {
       name: "LinkSieve",
       year: "2026",
