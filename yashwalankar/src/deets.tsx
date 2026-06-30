@@ -203,4 +203,14 @@ export const aiToolkit = {
     { name: 'Gemma 4 26B-A4B', vendor: 'Google', use: 'Local inference for private data', via: 'Ollama' },
     //{ name: 'Qwen 2.5 Coder', vendor: 'Alibaba', use: 'Local code-completion / autocomplete', via: 'Ollama · homelab' },
   ],
+  certifications: [
+    { course: 'Claude: Foundations', issuer: 'Anthropic · SkillJar', link: 'https://verify.skilljar.com/c/2suowcm8zihy' },
+    { course: 'Claude Code: Foundations', issuer: 'Anthropic · SkillJar', link: 'https://verify.skilljar.com/c/s6vr7b4ptpjt' },
+    { course: 'Claude Code in Action', issuer: 'Anthropic · SkillJar', link: 'https://verify.skilljar.com/c/td9s5yc2nozb' },
+    { course: 'MCP: Foundations', issuer: 'Anthropic · SkillJar', link: 'https://verify.skilljar.com/c/cdvvuy5gq6m2' },
+    { course: 'MCP: Advanced Topics', issuer: 'Anthropic · SkillJar', link: 'https://verify.skilljar.com/c/jnwrp64mizp9' },
+    { course: 'Agent Skills: Foundations', issuer: 'Anthropic · SkillJar', link: 'https://verify.skilljar.com/c/tce9jk6wqtg7' },
+    { course: 'AI Subagents', issuer: 'Anthropic · SkillJar', link: 'https://verify.skilljar.com/c/k24sa8tco5ct' },
+    
+  ],
 };

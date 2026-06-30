@@ -464,13 +464,147 @@ function PaperHomelab({ num, isMobile }: { num: string; isMobile: boolean }) {
   );
 }
 
+function CertificationsModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(28,26,23,0.45)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: T.card,
+          border: `1px solid ${T.hairStrong}`,
+          borderRadius: 4,
+          width: '100%',
+          maxWidth: 520,
+          boxShadow: '0 30px 60px -20px rgba(0,0,0,0.3)',
+          fontFamily: F.body,
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '18px 22px',
+          borderBottom: `1px solid ${T.hair}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div>
+            <PaperLabel>Credentials</PaperLabel>
+            <div style={{ fontFamily: F.display, fontSize: 22, fontWeight: 500, letterSpacing: '-0.01em', color: T.ink, marginTop: 4 }}>
+              Certifications
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: `1px solid ${T.hair}`,
+              cursor: 'pointer',
+              fontFamily: F.mono,
+              fontSize: 10,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: T.sub,
+              padding: '6px 10px',
+              borderRadius: 2,
+            }}
+          >
+            Close
+          </button>
+        </div>
+
+        {/* Cert list */}
+        <div style={{ padding: '6px 0' }}>
+          {aiToolkit.certifications.map((c, i) => (
+            <div
+              key={c.link}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                gap: 16,
+                alignItems: 'center',
+                padding: '14px 22px',
+                borderTop: i === 0 ? 'none' : `1px solid ${T.hair}`,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: T.ink }}>{c.course}</div>
+                <div style={{ fontFamily: F.mono, fontSize: 10, color: T.sub, marginTop: 3, letterSpacing: '0.06em' }}>
+                  {c.issuer}
+                </div>
+              </div>
+              <a
+                href={c.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontFamily: F.mono,
+                  fontSize: 10.5,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: T.ink,
+                  textDecoration: 'none',
+                  border: `1px solid ${T.hairStrong}`,
+                  padding: '6px 10px',
+                  borderRadius: 2,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Verify <ExternalLink size={9} />
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PaperAIToolkit({ num, isMobile }: { num: string; isMobile: boolean }) {
+  const [showCerts, setShowCerts] = useState(false);
   return (
     <>
       <SectionHead num={num} kicker={C.ai.kicker} title={C.ai.title} />
-      <p style={{ fontSize: 14, lineHeight: 1.65, color: T.sub, maxWidth: 540 }}>
+      <p style={{ fontSize: 14, lineHeight: 1.65, color: T.sub, maxWidth: 540, margin: '0 0 8px' }}>
         {aiToolkit.intro}
       </p>
+      <button
+        onClick={() => setShowCerts(true)}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 0,
+          fontFamily: F.mono,
+          fontSize: 11,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: T.ink,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          textDecoration: 'underline',
+          textUnderlineOffset: 3,
+          marginBottom: 8,
+        }}
+      >
+        View my certifications <ExternalLink size={10} />
+      </button>
+      {showCerts && <CertificationsModal onClose={() => setShowCerts(false)} />}
 
       {/* Unified tools table */}
       <div style={{ marginTop: 26 }}>
