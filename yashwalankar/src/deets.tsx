@@ -63,7 +63,15 @@ export const personalInfo = {
     { name: 'Raspberry Pi 4B', role: 'DNS + monitoring', watts: 5 },
   ],
 
-  projects: [ 
+  projects: [
+    {
+      name: "Buddy",
+      year: "2026",
+      description: "Desktop application with bundled whisper and onyx engine to take notes and transcribe audio from system or mic completely locally on device with LLM Plugin system",
+      technologies: ["Rust","React","Node","Tauri","Whisper","audio"],
+      link: "https://github.com/yashwalankar/buddy",
+      demo: "",
+    }, 
     {
       name: "KanbanMCP",
       year: "2026",
